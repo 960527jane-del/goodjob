@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}編輯食材 - 隨食隨地{% endblock %}
+
+{% block content %}
+    <h1>編輯食材</h1>
+    
+    <!-- 更新表單 -->
+    <form action="{{ url_for('ingredient.update', id=ingredient.id) }}" method="POST">
+        <!-- TODO: 將 ingredient 變數的資料帶入對應的 input value 中 -->
+        <button type="submit">儲存修改</button>
+    </form>
+    
+    <a href="{{ url_for('ingredient.index') }}">返回清單</a>
+{% endblock %}

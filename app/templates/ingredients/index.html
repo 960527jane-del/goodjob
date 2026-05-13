@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}我的材料庫 - 隨食隨地{% endblock %}
+
+{% block content %}
+    <h1>我的材料庫</h1>
+    
+    <!-- 新增食材表單區塊 -->
+    <section>
+        <h2>新增食材</h2>
+        <form action="{{ url_for('ingredient.add') }}" method="POST">
+            <!-- TODO: 加入表單欄位 name, quantity, unit, expiry_date -->
+            <button type="submit">新增</button>
+        </form>
+    </section>
+
+    <!-- 食材列表區塊 -->
+    <section>
+        <h2>現有食材清單</h2>
+        <!-- TODO: 迴圈迭代 ingredients，並加入編輯與刪除表單/按鈕 -->
+    </section>
+{% endblock %}

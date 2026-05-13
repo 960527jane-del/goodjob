@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}我的材料庫 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="ingredient-container">
+    <h2>我的材料庫</h2>
+    <a href="{{ url_for('ingredient.new_ingredient') }}" class="btn">新增食材</a>
+    
+    <!-- 未來這裡會使用 Jinja2 迴圈渲染食材清單 -->
+    <div class="ingredient-list">
+        <!-- 列表內容保留 -->
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}新增食材 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="ingredient-form-container">
+    <h2>新增食材</h2>
+    
+    <form action="{{ url_for('ingredient.create_ingredient') }}" method="POST">
+        <!-- 未來這裡會補上 name, quantity, unit, expiry_date 欄位 -->
+        
+        <button type="submit" class="btn">儲存</button>
+        <a href="{{ url_for('ingredient.list_ingredients') }}">取消</a>
+    </form>
+</div>
+{% endblock %}

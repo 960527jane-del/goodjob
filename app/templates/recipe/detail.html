@@ -1,22 +1,39 @@
 {% extends 'base.html' %}
-
-{% block title %}食譜詳細內容 - 隨食隨地{% endblock %}
-
+{% block title %}{{ recipe.title }} - 隨食隨地{% endblock %}
 {% block content %}
-<div class="recipe-detail-container">
-    <!-- 未來會從後端帶入食譜標題與圖片 -->
-    <h2 class="recipe-title">食譜名稱</h2>
-    
-    <div class="recipe-ingredients">
-        <h3>需要配料</h3>
-        <!-- 未來會標示出現有食材與缺漏食材 -->
-    </div>
+<div class="row justify-content-center mt-2">
+    <div class="col-lg-8">
+        <div class="card glass-card overflow-hidden mb-5">
+            <img src="{{ recipe.image }}" class="card-img-top recipe-detail-img" alt="{{ recipe.title }}">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="fw-bold text-gradient mb-3">{{ recipe.title }}</h1>
+                <div class="d-flex align-items-center gap-3 mb-4 text-light-muted">
+                    <span>🕒 預估時間：{{ recipe.readyInMinutes }} 分鐘</span>
+                </div>
+                
+                <hr class="border-light opacity-25 my-4">
+                
+                <h4 class="text-primary-light mb-4">所需配料清單</h4>
+                <ul class="list-group list-group-flush bg-transparent mb-4">
+                    {% for item in recipe.extendedIngredients %}
+                        <li class="list-group-item bg-transparent text-light border-light opacity-75 d-flex align-items-center">
+                            <span class="me-3 text-success">✔️</span> {{ item.original }}
+                        </li>
+                    {% endfor %}
+                </ul>
 
-    <div class="recipe-instructions">
-        <h3>烹飪步驟</h3>
-        <!-- 未來會渲染詳細步驟 -->
-    </div>
+                <hr class="border-light opacity-25 my-4">
 
-    <a href="{{ url_for('recipe.list_recipes') }}" class="btn">返回列表</a>
+                <h4 class="text-primary-light mb-4">烹飪步驟</h4>
+                <div class="instructions-content text-light opacity-75 lh-lg fs-5">
+                    {{ recipe.instructions | safe }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mb-5">
+            <a href="{{ url_for('recipe.list_recipes') }}" class="btn btn-outline-light rounded-pill px-5 py-2">返回推薦列表</a>
+        </div>
+    </div>
 </div>
 {% endblock %}

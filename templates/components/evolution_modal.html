@@ -1,0 +1,44 @@
+<!-- 進化動畫彈窗組件 -->
+<div class="evolution-modal" id="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title" style="display: none;">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content">
+        <div class="modal-particles" aria-hidden="true">
+            <span class="sparkle s1">✦</span>
+            <span class="sparkle s2">✧</span>
+            <span class="sparkle s3">✦</span>
+            <span class="sparkle s4">✧</span>
+            <span class="sparkle s5">✦</span>
+            <span class="sparkle s6">✧</span>
+            <span class="sparkle s7">✦</span>
+            <span class="sparkle s8">✧</span>
+        </div>
+
+        <h2 class="modal-header" id="evolution-title">🎉 恭喜進化！</h2>
+
+        <div class="evolution-comparison">
+            <div class="evo-before">
+                <div class="evo-circle">
+                    <span class="evo-emoji" id="evo-old-emoji">🥚</span>
+                </div>
+                <span class="evo-label" id="evo-old-name">舊型態</span>
+            </div>
+
+            <div class="evo-arrow">
+                <span class="arrow-icon">⟶</span>
+            </div>
+
+            <div class="evo-after">
+                <div class="evo-circle evo-circle-new">
+                    <span class="evo-emoji" id="evo-new-emoji">🍳</span>
+                </div>
+                <span class="evo-label" id="evo-new-name">新型態</span>
+            </div>
+        </div>
+
+        <p class="evo-description" id="evo-description">你的寵物進化了！</p>
+
+        <button class="modal-confirm-btn" id="evolution-confirm-btn">
+            太棒了！ 🎊
+        </button>
+    </div>
+</div>

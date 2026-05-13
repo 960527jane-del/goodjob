@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="寵物進化圖鑑 — 收集所有寵物型態，見證牠們的成長歷程">
+    <title>寵物圖鑑 | 隨食隨地</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/collection.css') }}">
+</head>
+<body>
+    <!-- 背景裝飾粒子 -->
+    <div class="bg-particles" aria-hidden="true">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+    </div>
+
+    <div class="collection-container">
+        <!-- 頂部導航 -->
+        <nav class="collection-nav">
+            <a href="/" class="nav-back" id="nav-back-btn">
+                <span class="nav-back-icon">←</span>
+                <span>返回</span>
+            </a>
+            <div class="nav-title">
+                <span class="nav-icon">📖</span>
+                寵物圖鑑
+            </div>
+            <div class="nav-spacer"></div>
+        </nav>
+
+        <!-- 當前寵物狀態卡 -->
+        {% if pet %}
+        <section class="pet-status-card" id="pet-status-section"
+                 style="--pet-primary: {{ pet.color_primary }}; --pet-secondary: {{ pet.color_secondary }};">
+            <div class="status-pet-visual">
+                <div class="pet-avatar-ring">
+                    <div class="pet-avatar">
+                        <span class="pet-emoji">{{ pet.stage_emoji }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-info">
+                <h2 class="status-pet-name">{{ pet.pet_name or pet.species_name }}</h2>
+                <div class="status-stage">
+                    <span class="stage-badge">{{ pet.stage_name }}</span>
+                    <span class="level-badge">Lv.{{ pet.current_level }}</span>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="exp-bar">
+                        <div class="exp-bar-fill" id="exp-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="exp-text" id="exp-text">EXP {{ pet.current_exp }}</span>
+                </div>
+            </div>
+            <!-- 開發用：快速加經驗值按鈕 -->
+            <div class="dev-tools">
+                <button class="dev-btn" id="add-exp-btn" data-exp="100" title="開發測試用">
+                    ⚡ +100 EXP
+                </button>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- 收集進度 -->
+        <section class="progress-section" id="progress-section">
+            <div class="progress-header">
+                <h2 class="section-title">
+                    <span class="title-icon">🏆</span>
+                    收集進度
+                </h2>
+                <div class="progress-count">
+                    <span class="progress-current" id="progress-current">{{ progress.unlocked }}</span>
+                    <span class="progress-divider">/</span>
+                    <span class="progress-total">{{ progress.total }}</span>
+                </div>
+            </div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="progress-bar-fill"
+                         style="width: {{ (progress.unlocked / progress.total * 100) if progress.total > 0 else 0 }}%">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 種族篩選 -->
+        <section class="filter-section">
+            <button class="filter-btn active" data-species="all" id="filter-all">全部</button>
+            {% for species in species_list %}
+            <button class="filter-btn" data-species="{{ species.id }}" id="filter-species-{{ species.id }}"
+                    style="--filter-color: {{ species.color_primary }}">
+                {{ species.emoji }} {{ species.name }}
+            </button>
+            {% endfor %}
+        </section>
+
+        <!-- 圖鑑卡片網格 -->
+        <section class="collection-grid" id="collection-grid">
+            {% for stage in all_stages %}
+            {% set is_unlocked = stage.id in unlocked_ids %}
+            <a href="{{ url_for('collection.collection_detail', stage_id=stage.id) }}"
+               class="collection-card {{ 'unlocked' if is_unlocked else 'locked' }}"
+               data-species="{{ stage.species_id }}"
+               data-stage-id="{{ stage.id }}"
+               id="card-stage-{{ stage.id }}"
+               style="--card-primary: {{ stage.color_primary }}; --card-secondary: {{ stage.color_secondary }};">
+                
+                <div class="card-glow"></div>
+                
+                <div class="card-image-area">
+                    {% if is_unlocked %}
+                    <span class="card-pet-emoji">{{ stage.emoji }}</span>
+                    {% else %}
+                    <span class="card-pet-emoji locked-emoji">❓</span>
+                    <div class="lock-overlay">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-info">
+                    <h3 class="card-name">{{ stage.name if is_unlocked else '???' }}</h3>
+                    <div class="card-meta">
+                        <span class="card-species">{{ stage.species_emoji }} {{ stage.species_name }}</span>
+                        <span class="card-level">Lv.{{ stage.level_required }}</span>
+                    </div>
+                    {% if not is_unlocked %}
+                    <div class="card-unlock-hint">
+                        需達到 Lv.{{ stage.level_required }} 解鎖
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-stage-indicator">
+                    {% for i in range(1, 5) %}
+                    <span class="stage-dot {{ 'active' if i <= stage.stage_order else '' }} {{ 'current' if i == stage.stage_order else '' }}"></span>
+                    {% endfor %}
+                </div>
+            </a>
+            {% endfor %}
+        </section>
+    </div>
+
+    <!-- 進化動畫彈窗 -->
+    {% include 'components/evolution_modal.html' %}
+
+    <script src="{{ url_for('static', filename='js/collection.js') }}"></script>
+</body>
+</html>

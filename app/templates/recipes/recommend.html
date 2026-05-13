@@ -1,10 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}推薦食譜 - 隨食隨地{% endblock %}
+{% block title %}找靈感 - 隨食隨地{% endblock %}
 
 {% block content %}
-    <h1>為您推薦的食譜</h1>
-    <p>根據您冰箱內的食材，您可以嘗試製作以下料理：</p>
-    
-    <!-- TODO: 顯示推薦的食譜清單卡片 -->
+<div class="text-center mb-5">
+    <h1 class="mb-3">✨ 為您推薦的食譜</h1>
+    <p class="text-muted">根據您冰箱內的食材，系統挑選了以下料理讓您找尋靈感。</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="glass-card text-center py-5">
+            <h3 class="mb-4 text-white">🚧 推薦演算法建置中...</h3>
+            <p class="text-muted mb-5" style="line-height: 1.8;">
+                我們正在教導 AI 寵物如何辨識您的食材，並組合出美味的食譜。<br>請稍後再來看看！
+            </p>
+            <a href="{{ url_for('ingredient.index') }}" class="btn btn-primary px-5 py-2">先回我的材料庫看看</a>
+        </div>
+    </div>
+</div>
 {% endblock %}

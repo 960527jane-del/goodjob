@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隨食隨地 - 首頁預覽</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF7E67;
+            --secondary: #FFB37C;
+            --dark: #2D3436;
+            --light: #F9F9F9;
+            --white: #FFFFFF;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* 裝飾背景圓圈 */
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+        }
+        .blob-1 {
+            top: -100px;
+            left: -100px;
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+        .blob-2 {
+            bottom: 100px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            border-radius: 50%;
+        }
+
+        /* 導覽列 */
+        header {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), #e65c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary);
+            transition: 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* 主要內容區塊 */
+        main {
+            padding: 3rem 5%;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            flex-grow: 1;
+        }
+
+        /* 歡迎與寵物區塊 */
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .welcome-text h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-text p {
+            font-size: 1.2rem;
+            color: #636e72;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, #e65c00 100%);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 126, 103, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 126, 103, 0.6);
+        }
+
+        /* 寵物卡片 (玻璃擬物風) */
+        .pet-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .pet-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pet-visual {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .pet-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pet-level {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        /* 進度條 */
+        .exp-container {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #636e72;
+        }
+
+        .exp-bar {
+            height: 12px;
+            background: #dfe6e9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .exp-fill {
+            height: 100%;
+            width: 45%;
+            background: linear-gradient(90deg, #00b894, #55efc4);
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* 發光特效 */
+        .exp-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 升級特效 */
+        .level-up-toast {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #00b894;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .level-up-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+            }
+            .welcome-text h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <header>
+        <div class="logo">🍳 隨食隨地</div>
+        <nav>
+            <ul>
+                <li><a href="#">首頁</a></li>
+                <li><a href="#">冰箱食材</a></li>
+                <li><a href="#">智能食譜</a></li>
+                <li><a href="#">我的寵物</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero-section">
+            <div class="welcome-text">
+                <h1>清空冰箱，<br>養成專屬虛擬寵物！</h1>
+                <p>今天想煮點什麼？上傳你的食材，我們為你推薦最適合的食譜。完成料理還能賺取經驗值，讓你的寵物快速升級！</p>
+                <button class="btn" onclick="feedPet()">👩‍🍳 煮飯餵食去</button>
+            </div>
+
+            <div class="pet-card">
+                <div class="level-up-toast" id="toast">🎉 Level Up!</div>
+                <div class="pet-visual" id="pet-emoji">🐣</div>
+                <div class="pet-info">
+                    <h2>貪吃小雞</h2>
+                    <div class="pet-level" id="level-badge">Lv. 3</div>
+                </div>
+                
+                <div class="exp-container">
+                    <div class="exp-header">
+                        <span>EXP</span>
+                        <span id="exp-text">45 / 100</span>
+                    </div>
+                    <div class="exp-bar">
+                        <div class="exp-fill" id="exp-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentExp = 45;
+        let maxExp = 100;
+        let level = 3;
+        const petEmojis = ['🐣', '🐥', '🐔', '🦅', '🐉']; // 寵物進化階段
+
+        function feedPet() {
+            // 模擬獲得 25 經驗值
+            currentExp += 25;
+            
+            if (currentExp >= maxExp) {
+                // 升級邏輯
+                currentExp = currentExp - maxExp;
+                level++;
+                maxExp = Math.floor(maxExp * 1.2); // 下一級需要更多經驗值
+                
+                // 更新畫面
+                document.getElementById('level-badge').innerText = `Lv. ${level}`;
+                showToast();
+                evolvePet();
+            }
+
+            // 更新進度條
+            const percentage = (currentExp / maxExp) * 100;
+            document.getElementById('exp-fill').style.width = `${percentage}%`;
+            document.getElementById('exp-text').innerText = `${currentExp} / ${maxExp}`;
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function evolvePet() {
+            const emojiIndex = Math.min(Math.floor(level / 3), petEmojis.length - 1);
+            document.getElementById('pet-emoji').innerText = petEmojis[emojiIndex];
+        }
+    </script>
+</body>
+</html>

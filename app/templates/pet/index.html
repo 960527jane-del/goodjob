@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}我的虛擬寵物 - 隨食隨地{% endblock %}
+
+{% block head %}
+<style>
+    /* 裝飾背景圓圈 */
+    .blob {
+        position: fixed;
+        filter: blur(80px);
+        z-index: -1;
+        opacity: 0.4;
+    }
+    .blob-1 {
+        top: -100px;
+        left: -100px;
+        width: 400px;
+        height: 400px;
+        background: var(--primary);
+        border-radius: 50%;
+    }
+    .blob-2 {
+        bottom: 100px;
+        right: -50px;
+        width: 300px;
+        height: 300px;
+        background: var(--secondary);
+        border-radius: 50%;
+    }
+
+    .hero-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: center;
+        margin-top: 2rem;
+    }
+
+    .welcome-text h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .feed-btn {
+        padding: 1rem 2.5rem;
+        border: none;
+        border-radius: 50px;
+        background: linear-gradient(135deg, var(--primary) 0%, #e65c00 100%);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 126, 103, 0.4);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .feed-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(255, 126, 103, 0.6);
+    }
+
+    /* 寵物卡片 (玻璃擬物風) */
+    .pet-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    .pet-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .pet-visual {
+        font-size: 6rem;
+        margin-bottom: 1rem;
+        animation: bounce 2s infinite ease-in-out;
+        display: inline-block;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    .pet-level {
+        display: inline-block;
+        background: var(--secondary);
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    /* 進度條 */
+    .exp-container {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .exp-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #636e72;
+    }
+
+    .exp-bar {
+        height: 12px;
+        background: #dfe6e9;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .exp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00b894, #55efc4);
+        border-radius: 10px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    /* 升級特效 */
+    .level-up-toast {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        background: #00b894;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-weight: bold;
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    .level-up-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<section class="hero-section">
+    <div class="welcome-text">
+        <h1>清空冰箱，<br>養成專屬虛擬寵物！</h1>
+        <p class="text-muted fs-5 mb-4">今天想煮點什麼？完成料理就能賺取經驗值，讓你的寵物快速升級！</p>
+        <button class="feed-btn" id="feedBtn">👩‍🍳 煮飯餵食去</button>
+    </div>
+
+    <div class="pet-card">
+        <div class="level-up-toast" id="toast">🎉 Level Up!</div>
+        
+        <!-- 動態根據等級決定寵物外觀 -->
+        <div class="pet-visual" id="petEmoji">
+            {% if pet.level < 3 %}🐣
+            {% elif pet.level < 6 %}🐥
+            {% elif pet.level < 10 %}🐔
+            {% else %}🦅
+            {% endif %}
+        </div>
+        
+        <div class="pet-info">
+            <h2>{{ pet.name }}</h2>
+            <div class="pet-level" id="levelBadge">Lv. {{ pet.level }}</div>
+        </div>
+        
+        <div class="exp-container">
+            <div class="exp-header">
+                <span>EXP</span>
+                <span id="expText">{{ pet.exp }} / 100</span>
+            </div>
+            <div class="exp-bar">
+                <div class="exp-fill" id="expFill" style="width: {{ (pet.exp / 100) * 100 }}%;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('feedBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('feedBtn');
+        btn.disabled = true;
+        btn.innerText = '餵食中...';
+
+        try {
+            // 發送 Ajax POST 請求給 Flask API
+            const response = await fetch("{{ url_for('pet.feed') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ exp_gained: 25 })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 更新畫面數值
+                document.getElementById('expText').innerText = `${data.pet.exp} / 100`;
+                document.getElementById('expFill').style.width = `${data.pet.exp}%`;
+
+                // 處理升級
+                if (data.is_level_up) {
+                    document.getElementById('levelBadge').innerText = `Lv. ${data.pet.level}`;
+                    
+                    // 顯示 Toast
+                    const toast = document.getElementById('toast');
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2000);
+
+                    // 簡單進化邏輯 (前端即時變化)
+                    const emojiDiv = document.getElementById('petEmoji');
+                    if (data.pet.level >= 10) emojiDiv.innerText = '🦅';
+                    else if (data.pet.level >= 6) emojiDiv.innerText = '🐔';
+                    else if (data.pet.level >= 3) emojiDiv.innerText = '🐥';
+                }
+            } else {
+                alert('發生錯誤：' + data.error);
+            }
+        } catch (error) {
+            console.error('Error feeding pet:', error);
+            alert('系統連線發生錯誤');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '👩‍🍳 煮飯餵食去';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}隨食隨地{% endblock %}</title>
+    <!-- 將來這裡可以引入 CSS 或 Bootstrap -->
+</head>
+<body>
+    <nav>
+        <h1>隨食隨地</h1>
+        <a href="{{ url_for('pet.pet_index') }}">我的寵物</a>
+    </nav>
+    
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    <!-- 將來這裡可以引入共用 JS -->
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

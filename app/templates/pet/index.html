@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}我的虛擬寵物 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="pet-container">
+    <h2>我的寵物狀態</h2>
+    
+    <!-- 寵物圖片區塊 -->
+    <div class="pet-image">
+        <p>這裡會放寵物圖片 (Level {{ pet.level if pet else 1 }})</p>
+    </div>
+    
+    <!-- 狀態資訊與進度條 -->
+    <div class="pet-status">
+        <p>等級: <span id="pet-level">{{ pet.level if pet else 1 }}</span></p>
+        <p>經驗值: <span id="pet-exp">{{ pet.exp if pet else 0 }}</span> / 100</p>
+        
+        <div class="progress-bar-container" style="width: 100%; background-color: #eee;">
+            <!-- 將來用 CSS 控制寬度來呈現進度 -->
+            <div id="pet-progress" class="progress-bar" style="width: 0%; background-color: green; height: 20px;"></div>
+        </div>
+    </div>
+    
+    <!-- 互動按鈕 -->
+    <div class="pet-actions">
+        <!-- 這裡先預留一個觸發餵食的按鈕供測試用 -->
+        <button id="feed-btn">手動餵食 (測試)</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 預留給 AJAX 餵食請求的 script 區塊
+    document.getElementById('feed-btn').addEventListener('click', function() {
+        console.log("觸發餵食 API");
+        // 將在實作階段使用 fetch POST 到 /pet/feed
+    });
+</script>
+{% endblock %}

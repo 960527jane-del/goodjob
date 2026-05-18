@@ -3,39 +3,115 @@
 {% block title %}我的虛擬寵物 - 隨食隨地{% endblock %}
 
 {% block content %}
-<div class="pet-container">
-    <h2>我的寵物狀態</h2>
-    
-    <!-- 寵物圖片區塊 -->
-    <div class="pet-image">
-        <p>這裡會放寵物圖片 (Level {{ pet.level if pet else 1 }})</p>
-    </div>
-    
-    <!-- 狀態資訊與進度條 -->
-    <div class="pet-status">
-        <p>等級: <span id="pet-level">{{ pet.level if pet else 1 }}</span></p>
-        <p>經驗值: <span id="pet-exp">{{ pet.exp if pet else 0 }}</span> / 100</p>
-        
-        <div class="progress-bar-container" style="width: 100%; background-color: #eee;">
-            <!-- 將來用 CSS 控制寬度來呈現進度 -->
-            <div id="pet-progress" class="progress-bar" style="width: 0%; background-color: green; height: 20px;"></div>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6 text-center">
+        <div class="card shadow-sm rounded-4 border-0">
+            <div class="card-body p-5">
+                <h2 class="card-title mb-4 fw-bold text-success">{{ pet.name if pet else '尚未建立寵物' }}</h2>
+                
+                <!-- 寵物圖片區塊 -->
+                <div class="pet-image mb-4 position-relative">
+                    <!-- 由於沒有實際圖片素材，用一個 FontAwesome icon 代替，並隨等級改變大小與顏色 -->
+                    <div id="pet-avatar-container" class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 200px; height: 200px; border: 4px solid #198754;">
+                        <i id="pet-avatar-icon" class="fa-solid fa-cat text-success" style="font-size: {{ 5 + (pet.level if pet else 1) }}rem; transition: all 0.5s ease;"></i>
+                    </div>
+                    <!-- 升級提示動畫元件 -->
+                    <div id="level-up-badge" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-50 translate-middle" style="display: none; font-size: 1.2rem; transform: scale(0);">
+                        升級啦！🎉
+                    </div>
+                </div>
+                
+                <!-- 狀態資訊與進度條 -->
+                <div class="pet-status mb-4 text-start">
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-5 fw-bold">Lv. <span id="pet-level" class="text-success">{{ pet.level if pet else 1 }}</span></span>
+                        <small class="text-muted"><span id="pet-exp">{{ (pet.exp % 100) if pet else 0 }}</span> / 100 EXP</small>
+                    </div>
+                    
+                    <div class="progress" style="height: 20px; border-radius: 10px;">
+                        {% set exp_percent = (pet.exp % 100) if pet else 0 %}
+                        <div id="pet-progress" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ exp_percent }}%; transition: width 0.5s ease-in-out;" aria-valuenow="{{ exp_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                
+                <!-- 互動按鈕 -->
+                <div class="pet-actions mt-4">
+                    <button id="feed-btn" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm fw-bold">
+                        <i class="fa-solid fa-cookie-bite"></i> 手動餵食
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <!-- 互動按鈕 -->
-    <div class="pet-actions">
-        <!-- 這裡先預留一個觸發餵食的按鈕供測試用 -->
-        <button id="feed-btn">手動餵食 (測試)</button>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // 預留給 AJAX 餵食請求的 script 區塊
-    document.getElementById('feed-btn').addEventListener('click', function() {
-        console.log("觸發餵食 API");
-        // 將在實作階段使用 fetch POST 到 /pet/feed
+    document.addEventListener('DOMContentLoaded', function() {
+        const feedBtn = document.getElementById('feed-btn');
+        const levelSpan = document.getElementById('pet-level');
+        const expSpan = document.getElementById('pet-exp');
+        const progressBar = document.getElementById('pet-progress');
+        const levelUpBadge = document.getElementById('level-up-badge');
+        const petAvatarIcon = document.getElementById('pet-avatar-icon');
+        
+        feedBtn.addEventListener('click', function() {
+            // 停用按鈕避免重複點擊
+            feedBtn.disabled = true;
+            feedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 餵食中...';
+            
+            fetch("{{ url_for('pet.feed_pet') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const pet = data.pet;
+                    const expPercent = pet.exp % 100;
+                    
+                    // 更新進度條與文字
+                    progressBar.style.width = expPercent + '%';
+                    progressBar.setAttribute('aria-valuenow', expPercent);
+                    expSpan.textContent = expPercent;
+                    
+                    // 若有升級，則顯示特效並更新等級
+                    if (data.pet.is_level_up) {
+                        levelSpan.textContent = pet.level;
+                        
+                        // 讓寵物圖示變大一點點作為視覺回饋
+                        petAvatarIcon.style.fontSize = (5 + pet.level) + 'rem';
+                        
+                        // 顯示升級徽章並執行簡單的 CSS 動畫
+                        levelUpBadge.style.display = 'block';
+                        levelUpBadge.style.transform = 'translate(-50%, -50%) scale(1)';
+                        levelUpBadge.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        
+                        // 3 秒後隱藏升級徽章
+                        setTimeout(() => {
+                            levelUpBadge.style.transform = 'translate(-50%, -50%) scale(0)';
+                            setTimeout(() => {
+                                levelUpBadge.style.display = 'none';
+                            }, 500);
+                        }, 3000);
+                    }
+                } else {
+                    alert('發生錯誤: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("伺服器連線失敗");
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                feedBtn.disabled = false;
+                feedBtn.innerHTML = '<i class="fa-solid fa-cookie-bite"></i> 手動餵食';
+            });
+        });
     });
 </script>
 {% endblock %}

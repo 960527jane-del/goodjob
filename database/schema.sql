@@ -1,0 +1,27 @@
+-- 建立 users 資料表
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 建立 pets 資料表
+CREATE TABLE IF NOT EXISTS pets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    exp INTEGER DEFAULT 0,
+    level INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 建立觸發器以在更新 pets 時自動更新 updated_at
+CREATE TRIGGER IF NOT EXISTS update_pets_updated_at
+AFTER UPDATE ON pets
+FOR EACH ROW
+BEGIN
+    UPDATE pets SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;

@@ -1,7 +1,9 @@
 from app.models import db
 from datetime import datetime
+import logging
 
 class User(db.Model):
+    """使用者資料表模型"""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -16,24 +18,54 @@ class User(db.Model):
 
     @classmethod
     def create(cls, username, email):
-        user = cls(username=username, email=email)
-        db.session.add(user)
-        db.session.commit()
-        return user
+        """新增一筆使用者記錄"""
+        try:
+            user = cls(username=username, email=email)
+            db.session.add(user)
+            db.session.commit()
+            return user
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error creating user: {e}")
+            return None
         
     @classmethod
     def get_by_id(cls, user_id):
-        return cls.query.get(user_id)
+        """取得單筆使用者記錄"""
+        try:
+            return cls.query.get(user_id)
+        except Exception as e:
+            logging.error(f"Error getting user by id: {e}")
+            return None
         
     @classmethod
     def get_all(cls):
-        return cls.query.all()
+        """取得所有使用者記錄"""
+        try:
+            return cls.query.all()
+        except Exception as e:
+            logging.error(f"Error getting all users: {e}")
+            return []
         
     def update(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        db.session.commit()
+        """更新使用者記錄"""
+        try:
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error updating user: {e}")
+            return False
         
     def delete(self):
-        db.session.delete(self)
-        db.session.commit()
+        """刪除使用者記錄"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error deleting user: {e}")
+            return False

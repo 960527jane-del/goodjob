@@ -11,4 +11,4 @@ def index():
     處理邏輯: 處理基本顯示，檢查狀態。
     輸出: 渲染 templates/index.html
     """
-    pass
+    return render_template('index.html')

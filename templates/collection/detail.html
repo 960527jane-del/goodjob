@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ stage.name }} — {{ stage.species_name }} 的進化型態">
+    <title>{{ stage.name if is_unlocked else '???' }} | 寵物圖鑑 | 隨食隨地</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/collection.css') }}">
+</head>
+<body>
+    <div class="bg-particles" aria-hidden="true">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+    </div>
+
+    <div class="detail-container" style="--card-primary: {{ stage.color_primary }}; --card-secondary: {{ stage.color_secondary }};">
+        <!-- 頂部導航 -->
+        <nav class="collection-nav">
+            <a href="{{ url_for('collection.collection_index') }}" class="nav-back" id="detail-back-btn">
+                <span class="nav-back-icon">←</span>
+                <span>返回圖鑑</span>
+            </a>
+            <div class="nav-title">
+                <span class="nav-icon">{{ stage.species_emoji }}</span>
+                {{ stage.species_name }}
+            </div>
+            <div class="nav-spacer"></div>
+        </nav>
+
+        {% if is_unlocked %}
+        <!-- 已解鎖：顯示完整資訊 -->
+        <section class="detail-hero" id="detail-hero">
+            <div class="hero-glow"></div>
+            <div class="hero-pet-visual">
+                <div class="hero-avatar-ring">
+                    <div class="hero-avatar">
+                        <span class="hero-emoji">{{ stage.emoji }}</span>
+                    </div>
+                </div>
+            </div>
+            <h1 class="hero-name">{{ stage.name }}</h1>
+            <div class="hero-badges">
+                <span class="badge badge-species">{{ stage.species_emoji }} {{ stage.species_name }}</span>
+                <span class="badge badge-stage">Stage {{ stage.stage_order }}</span>
+                <span class="badge badge-level">Lv.{{ stage.level_required }}+</span>
+            </div>
+        </section>
+
+        <section class="detail-description" id="detail-description">
+            <h2 class="section-subtitle">📜 描述</h2>
+            <p class="description-text">{{ stage.description }}</p>
+        </section>
+
+        <!-- 進化路線圖 -->
+        <section class="evolution-path" id="evolution-path">
+            <h2 class="section-subtitle">🔄 進化路線</h2>
+            <div class="path-container">
+                {% for s in all_stages_of_species %}
+                {% set s_unlocked = s.id in unlocked_ids %}
+                <div class="path-node {{ 'active' if s_unlocked else 'inactive' }} {{ 'current' if s.id == stage.id else '' }}">
+                    <div class="path-node-circle">
+                        <span class="path-emoji">{{ s.emoji if s_unlocked else '❓' }}</span>
+                    </div>
+                    <span class="path-node-name">{{ s.name if s_unlocked else '???' }}</span>
+                    <span class="path-node-level">Lv.{{ s.level_required }}</span>
+                </div>
+                {% if not loop.last %}
+                <div class="path-connector {{ 'active' if s_unlocked else '' }}">
+                    <div class="connector-line"></div>
+                    <span class="connector-arrow">▸</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        {% else %}
+        <!-- 未解鎖：顯示神秘資訊 -->
+        <section class="detail-hero locked-hero" id="detail-hero-locked">
+            <div class="hero-pet-visual">
+                <div class="hero-avatar-ring locked-ring">
+                    <div class="hero-avatar locked-avatar">
+                        <span class="hero-emoji">❓</span>
+                    </div>
+                </div>
+            </div>
+            <h1 class="hero-name">? ? ?</h1>
+            <div class="hero-badges">
+                <span class="badge badge-species">{{ stage.species_emoji }} {{ stage.species_name }}</span>
+                <span class="badge badge-locked">🔒 尚未解鎖</span>
+            </div>
+        </section>
+
+        <section class="locked-info" id="locked-info">
+            <div class="locked-message">
+                <span class="locked-message-icon">🔒</span>
+                <h2>尚未解鎖此型態</h2>
+                <p>將你的 {{ stage.species_name }} 培養到 <strong>Lv.{{ stage.level_required }}</strong> 即可解鎖！</p>
+                <p class="locked-encourage">繼續烹飪，累積經驗值吧！💪</p>
+            </div>
+        </section>
+
+        <!-- 進化路線（部分遮罩） -->
+        <section class="evolution-path" id="evolution-path-locked">
+            <h2 class="section-subtitle">🔄 進化路線</h2>
+            <div class="path-container">
+                {% for s in all_stages_of_species %}
+                {% set s_unlocked = s.id in unlocked_ids %}
+                <div class="path-node {{ 'active' if s_unlocked else 'inactive' }} {{ 'current' if s.id == stage.id else '' }}">
+                    <div class="path-node-circle">
+                        <span class="path-emoji">{{ s.emoji if s_unlocked else '❓' }}</span>
+                    </div>
+                    <span class="path-node-name">{{ s.name if s_unlocked else '???' }}</span>
+                    <span class="path-node-level">Lv.{{ s.level_required }}</span>
+                </div>
+                {% if not loop.last %}
+                <div class="path-connector {{ 'active' if s_unlocked else '' }}">
+                    <div class="connector-line"></div>
+                    <span class="connector-arrow">▸</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- 返回按鈕 -->
+        <div class="detail-actions">
+            <a href="{{ url_for('collection.collection_index') }}" class="btn-back-collection" id="btn-back-to-collection">
+                ← 返回圖鑑
+            </a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/collection.js') }}"></script>
+</body>
+</html>

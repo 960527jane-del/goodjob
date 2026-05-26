@@ -1,67 +1,70 @@
-# 路由設計文件 (Routes) - 隨食隨地
+# 路由設計 - 智慧食譜推薦系統 (F-02)
 
-本文件詳細規劃了「隨食隨地」系統後端的路由與前端頁面的對應關係，確保前端行為與資料庫操作能正確串接。
+本文件依據 PRD 與架構設計，規劃 Flask 應用程式的路由 (Routes) 與 Jinja2 模板對應關係。除了核心的「智慧食譜推薦 (F-02)」功能外，也一併規劃了「我的材料庫」的基礎 CRUD 路由，以利後續的完整測試。
 
 ## 1. 路由總覽表格
 
 | 功能 | HTTP 方法 | URL 路徑 | 對應模板 | 說明 |
-| :--- | :--- | :--- | :--- | :--- |
-| 我的材料庫 (首頁) | GET | `/` | `ingredients/index.html` | 列出目前所有食材，並包含新增表單 |
-| 新增食材 | POST | `/ingredient/add` | — | 接收新增表單，寫入資料庫後重導向至 `/` |
-| 編輯食材頁面 | GET | `/ingredient/edit/<id>` | `ingredients/edit.html` | 顯示單一食材的修改表單 |
-| 更新食材 | POST | `/ingredient/update/<id>` | — | 接收修改表單，更新資料庫後重導向至 `/` |
-| 刪除食材 | POST | `/ingredient/delete/<id>` | — | 刪除指定食材，完成後重導向至 `/` |
-| 推薦食譜 | GET | `/recipes/recommend` | `recipes/recommend.html` | 根據現有食材推薦食譜 |
+| :--- | :---: | :--- | :--- | :--- |
+| **我的材料庫列表** | `GET` | `/ingredients` | `ingredient/list.html` | 顯示所有現有食材 |
+| **新增食材頁面** | `GET` | `/ingredients/new` | `ingredient/new.html` | 顯示新增食材表單 |
+| **建立食材** | `POST` | `/ingredients` | — | 接收表單，存入 DB，重導向列表 |
+| **編輯食材頁面** | `GET` | `/ingredients/<id>/edit` | `ingredient/edit.html` | 顯示編輯特定食材的表單 |
+| **更新食材** | `POST` | `/ingredients/<id>/update` | — | 接收表單，更新 DB，重導向列表 |
+| **刪除食材** | `POST` | `/ingredients/<id>/delete` | — | 刪除指定食材，重導向列表 |
+| **推薦食譜列表** | `GET` | `/recipes` | `recipe/list.html` | 讀取食材庫，呼叫外部 API，顯示推薦清單 |
+| **食譜詳細頁面** | `GET` | `/recipes/<id>` | `recipe/detail.html` | 顯示特定食譜的烹飪教學與缺漏配料 |
 
 ## 2. 每個路由的詳細說明
 
-### `GET /` (首頁 / 我的材料庫)
-- **輸入**：無。
-- **處理邏輯**：呼叫 `Ingredient.get_all()` 取得所有依建立時間反序排列的食材紀錄。
-- **輸出**：渲染 `ingredients/index.html`，傳遞 `ingredients` 變數。
-- **錯誤處理**：若資料庫為空，顯示「目前沒有食材，請新增！」的空狀態畫面。
+### 我的材料庫 (Ingredients)
+- **`GET /ingredients`**
+  - **處理邏輯**：呼叫 `IngredientModel.get_all()` 取得所有食材。
+  - **輸出**：渲染 `ingredient/list.html` 並傳入 `ingredients` 資料。
+- **`GET /ingredients/new`**
+  - **處理邏輯**：無特殊邏輯，僅顯示表單。
+  - **輸出**：渲染 `ingredient/new.html`。
+- **`POST /ingredients`**
+  - **輸入**：表單欄位 `name`, `quantity`, `unit`, `expiry_date`。
+  - **處理邏輯**：驗證資料後呼叫 `IngredientModel.create(...)` 存入。
+  - **輸出**：重導向至 `/ingredients`。
+- **`GET /ingredients/<id>/edit`**
+  - **處理邏輯**：呼叫 `IngredientModel.get_by_id(id)` 取得該筆食材資料。
+  - **輸出**：渲染 `ingredient/edit.html`，若查無資料則回傳 404。
+- **`POST /ingredients/<id>/update`**
+  - **輸入**：表單欄位 `name`, `quantity`, `unit`, `expiry_date`。
+  - **處理邏輯**：驗證資料後呼叫 `IngredientModel.update(...)` 更新。
+  - **輸出**：重導向至 `/ingredients`。
+- **`POST /ingredients/<id>/delete`**
+  - **處理邏輯**：呼叫 `IngredientModel.delete(id)` 刪除該筆資料。
+  - **輸出**：重導向至 `/ingredients`。
 
-### `POST /ingredient/add` (新增食材)
-- **輸入**：表單欄位 `name`, `quantity`, `unit`, `expiry_date`。
-- **處理邏輯**：接收欄位值，進行簡單空值檢查，呼叫 `Ingredient.create(...)` 寫入資料庫。
-- **輸出**：重導向至 `GET /`。
-- **錯誤處理**：若 `name` 或 `quantity` 為空，使用 `flash()` 提示錯誤，然後重導向回首頁。
-
-### `GET /ingredient/edit/<id>` (編輯食材頁面)
-- **輸入**：URL 參數 `id`。
-- **處理邏輯**：呼叫 `Ingredient.get_by_id(id)` 取得該筆食材的原始資料。
-- **輸出**：渲染 `ingredients/edit.html`，傳遞 `ingredient` 變數。
-- **錯誤處理**：若找不到該 ID，回傳 404 錯誤，或 `flash()` 並重導向回首頁。
-
-### `POST /ingredient/update/<id>` (更新食材)
-- **輸入**：URL 參數 `id` 以及表單欄位 `name`, `quantity`, `unit`, `expiry_date`。
-- **處理邏輯**：接收更新的資料，呼叫 `Ingredient.update(...)` 修改資料庫內容。
-- **輸出**：重導向至 `GET /`。
-- **錯誤處理**：若資料驗證失敗，`flash()` 錯誤訊息並重導向回該編輯頁面。
-
-### `POST /ingredient/delete/<id>` (刪除食材)
-- **輸入**：URL 參數 `id`。
-- **處理邏輯**：呼叫 `Ingredient.delete(id)` 刪除該筆資料。
-- **輸出**：重導向至 `GET /`。
-- **錯誤處理**：若該 ID 不存在，則忽略操作或 `flash()` 錯誤訊息。
-
-### `GET /recipes/recommend` (推薦食譜)
-- **輸入**：無。
-- **處理邏輯**：取得現有食材，呼叫簡易演算法或外部 API 取回推薦食譜 (MVP 初期可使用測試資料)。
-- **輸出**：渲染 `recipes/recommend.html`。
-- **錯誤處理**：如果無食材可推薦，提示使用者先新增食材。
+### 智慧食譜推薦 (Recipes)
+- **`GET /recipes`**
+  - **處理邏輯**：
+    1. 呼叫 `IngredientModel.get_all()` 取得可用食材。
+    2. 將食材轉換為關鍵字，呼叫外部食譜 API 尋找匹配食譜。
+    3. 解析 API 回傳資料。
+  - **輸出**：渲染 `recipe/list.html` 並傳入推薦清單。
+  - **錯誤處理**：若外部 API 失敗，可回傳友善錯誤提示。
+- **`GET /recipes/<id>`**
+  - **輸入**：URL 參數 `<id>` (外部食譜的 ID)。
+  - **處理邏輯**：
+    1. 使用 ID 向外部 API 請求詳細食譜資訊（步驟、完整配料表）。
+    2. 將食譜所需配料與本地 `IngredientModel.get_all()` 進行比對，標示出現有與缺漏的食材。
+  - **輸出**：渲染 `recipe/detail.html` 並傳入詳細資訊。
 
 ## 3. Jinja2 模板清單
 
-所有的模板檔案預期將建立在 `app/templates/` 目錄下：
+所有模板皆繼承自 `templates/base.html`，確保全站包含導覽列 (Navbar) 與共用外觀。
 
-1. `base.html`：共用版型，包含導覽列 (Navbar)、主體結構與 Footer、以及統一引入 CSS 樣式。
-2. `ingredients/index.html`：繼承自 `base.html`。首頁，負責呈現食材清單、操作按鈕 (編輯/刪除)，以及新增食材的表單區塊。
-3. `ingredients/edit.html`：繼承自 `base.html`。獨立的修改頁面，用於編輯特定食材的數量與有效期限。
-4. `recipes/recommend.html`：繼承自 `base.html`。顯示系統推薦的食譜清單。
+- `templates/base.html`: 網站共用版型 (Base Layout)。
+- `templates/ingredient/list.html`: 我的材料庫列表頁。
+- `templates/ingredient/new.html`: 新增食材表單頁面。
+- `templates/ingredient/edit.html`: 編輯食材表單頁面。
+- `templates/recipe/list.html`: 智慧食譜推薦結果頁面。
+- `templates/recipe/detail.html`: 單一食譜詳細教學頁面。
 
 ## 4. 路由骨架程式碼
 
-路由的骨架已經建立在 `app/routes/` 之下，採用 Flask Blueprint 進行模組化規劃：
-- `app/routes/ingredient.py`：處理食材管理的增刪改查路由。
-- `app/routes/recipe.py`：處理食譜推薦相關路由。
+相關的 Flask 路由骨架 (Blueprint) 已建立於 `app/routes/ingredient.py` 與 `app/routes/recipe.py` 中。

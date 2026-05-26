@@ -1,140 +1,131 @@
 import sqlite3
 import os
-from datetime import datetime
+import logging
 
-# 確保 instance 資料夾存在，並指向正確的資料庫檔案位置
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
-if not os.path.exists(INSTANCE_DIR):
-    os.makedirs(INSTANCE_DIR)
+# 設定資料庫檔案路徑 (在 instance 資料夾下)
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'instance', 'database.db')
 
-DATABASE = os.path.join(INSTANCE_DIR, 'database.db')
+class IngredientModel:
+    """處理食材庫 (ingredients) 的資料庫操作"""
 
-def get_db_connection():
-    """
-    建立並回傳資料庫連線
-    設定 row_factory 為 sqlite3.Row 讓查詢結果可以像字典一樣透過欄位名稱存取
-    """
-    try:
-        conn = sqlite3.connect(DATABASE)
-        conn.row_factory = sqlite3.Row
-        return conn
-    except sqlite3.Error as e:
-        print(f"資料庫連線錯誤: {e}")
-        return None
-
-class Ingredient:
     @staticmethod
-    def create(name, quantity, unit, expiry_date):
+    def get_connection():
         """
-        新增一筆食材紀錄
-        :param name: 食材名稱
-        :param quantity: 數量
-        :param unit: 單位
-        :param expiry_date: 保存期限 (YYYY-MM-DD)
-        :return: 成功時回傳新增資料的 ID，失敗回傳 None
+        取得資料庫連線。
+        確保 instance 目錄存在，並設定 row_factory 讓查詢結果能以 dict 方式存取。
         """
-        conn = get_db_connection()
-        if not conn: return None
-        
         try:
-            created_at = datetime.now().isoformat()
-            cursor = conn.cursor()
-            cursor.execute(
-                'INSERT INTO ingredients (name, quantity, unit, expiry_date, created_at) VALUES (?, ?, ?, ?, ?)',
-                (name, quantity, unit, expiry_date, created_at)
-            )
-            conn.commit()
-            return cursor.lastrowid
-        except sqlite3.Error as e:
-            print(f"新增食材時發生錯誤: {e}")
-            conn.rollback()
+            os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+            conn = sqlite3.connect(DB_PATH)
+            conn.row_factory = sqlite3.Row
+            return conn
+        except Exception as e:
+            logging.error(f"資料庫連線失敗: {e}")
+            raise
+
+    @classmethod
+    def create(cls, name, quantity, unit, expiry_date=None):
+        """
+        新增一筆食材記錄。
+        
+        :param name: 食材名稱 (str)
+        :param quantity: 數量 (float)
+        :param unit: 單位 (str)
+        :param expiry_date: 有效期限，格式 YYYY-MM-DD (str, optional)
+        :return: 新增的記錄 ID，失敗則回傳 None
+        """
+        query = '''
+            INSERT INTO ingredients (name, quantity, unit, expiry_date)
+            VALUES (?, ?, ?, ?)
+        '''
+        try:
+            with cls.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (name, quantity, unit, expiry_date))
+                conn.commit()
+                return cursor.lastrowid
+        except Exception as e:
+            logging.error(f"新增食材失敗: {e}")
             return None
-        finally:
-            conn.close()
 
-    @staticmethod
-    def get_all():
+    @classmethod
+    def get_all(cls):
         """
-        取得所有食材紀錄，依建立時間反序排列
-        :return: 包含字典的 list，若失敗回傳空 list
-        """
-        conn = get_db_connection()
-        if not conn: return []
+        取得所有食材記錄，依照有效期限排序 (快過期的在前面)。
         
+        :return: 食材記錄的 list (dict 格式)
+        """
+        query = 'SELECT * FROM ingredients ORDER BY expiry_date ASC, id DESC'
         try:
-            items = conn.execute('SELECT * FROM ingredients ORDER BY created_at DESC').fetchall()
-            return [dict(ix) for ix in items]
-        except sqlite3.Error as e:
-            print(f"取得所有食材時發生錯誤: {e}")
+            with cls.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query)
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logging.error(f"取得所有食材失敗: {e}")
             return []
-        finally:
-            conn.close()
 
-    @staticmethod
-    def get_by_id(ingredient_id):
+    @classmethod
+    def get_by_id(cls, ingredient_id):
         """
-        根據 ID 取得單筆食材紀錄
-        :param ingredient_id: 食材 ID
-        :return: 成功時回傳字典格式的資料，找不到或失敗回傳 None
-        """
-        conn = get_db_connection()
-        if not conn: return None
+        根據 ID 取得單筆食材記錄。
         
+        :param ingredient_id: 食材 ID (int)
+        :return: 單筆記錄 (dict 格式)，找不到或失敗則回傳 None
+        """
+        query = 'SELECT * FROM ingredients WHERE id = ?'
         try:
-            item = conn.execute('SELECT * FROM ingredients WHERE id = ?', (ingredient_id,)).fetchone()
-            return dict(item) if item else None
-        except sqlite3.Error as e:
-            print(f"取得單筆食材 (ID: {ingredient_id}) 時發生錯誤: {e}")
+            with cls.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (ingredient_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+        except Exception as e:
+            logging.error(f"取得單筆食材失敗: {e}")
             return None
-        finally:
-            conn.close()
 
-    @staticmethod
-    def update(ingredient_id, name, quantity, unit, expiry_date):
+    @classmethod
+    def update(cls, ingredient_id, name, quantity, unit, expiry_date=None):
         """
-        更新特定食材紀錄
-        :param ingredient_id: 食材 ID
-        :param name: 新名稱
-        :param quantity: 新數量
-        :param unit: 新單位
-        :param expiry_date: 新保存期限
-        :return: 成功回傳 True，失敗回傳 False
-        """
-        conn = get_db_connection()
-        if not conn: return False
+        更新特定食材記錄。
         
+        :param ingredient_id: 食材 ID (int)
+        :param name: 食材名稱 (str)
+        :param quantity: 數量 (float)
+        :param unit: 單位 (str)
+        :param expiry_date: 有效期限，格式 YYYY-MM-DD (str, optional)
+        :return: 成功與否 (bool)
+        """
+        query = '''
+            UPDATE ingredients
+            SET name = ?, quantity = ?, unit = ?, expiry_date = ?
+            WHERE id = ?
+        '''
         try:
-            conn.execute(
-                'UPDATE ingredients SET name = ?, quantity = ?, unit = ?, expiry_date = ? WHERE id = ?',
-                (name, quantity, unit, expiry_date, ingredient_id)
-            )
-            conn.commit()
-            return True
-        except sqlite3.Error as e:
-            print(f"更新食材 (ID: {ingredient_id}) 時發生錯誤: {e}")
-            conn.rollback()
+            with cls.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (name, quantity, unit, expiry_date, ingredient_id))
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            logging.error(f"更新食材失敗: {e}")
             return False
-        finally:
-            conn.close()
 
-    @staticmethod
-    def delete(ingredient_id):
+    @classmethod
+    def delete(cls, ingredient_id):
         """
-        刪除特定食材紀錄
-        :param ingredient_id: 食材 ID
-        :return: 成功回傳 True，失敗回傳 False
-        """
-        conn = get_db_connection()
-        if not conn: return False
+        刪除特定食材記錄。
         
+        :param ingredient_id: 食材 ID (int)
+        :return: 成功與否 (bool)
+        """
+        query = 'DELETE FROM ingredients WHERE id = ?'
         try:
-            conn.execute('DELETE FROM ingredients WHERE id = ?', (ingredient_id,))
-            conn.commit()
-            return True
-        except sqlite3.Error as e:
-            print(f"刪除食材 (ID: {ingredient_id}) 時發生錯誤: {e}")
-            conn.rollback()
+            with cls.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (ingredient_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            logging.error(f"刪除食材失敗: {e}")
             return False
-        finally:
-            conn.close()

@@ -1,18 +1,25 @@
 import os
 import sqlite3
 from flask import Flask
-from app.routes.ingredient import ingredient_bp
-from app.routes.recipe import recipe_bp
 
 def create_app():
-    app = Flask(__name__)
-    # 設定一個開發用的 SECRET_KEY，實際部署應該從環境變數讀取
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key')
+    # 初始化 Flask 應用程式
+    app = Flask(__name__, instance_relative_config=True)
+    
+    # 載入基礎設定
+    app.config.from_object('app.config.Config')
+    
+    # 設定資料庫路徑
+    app.config['DATABASE'] = os.path.join(app.instance_path, 'database.db')
 
-    # 確保 instance 資料夾存在以存放 SQLite 資料庫
-    os.makedirs(app.instance_path, exist_ok=True)
+    # 確保 instance 目錄存在 (存放 sqlite 資料庫)
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
 
-    # 註冊 Blueprints
+    # 註冊 Blueprints (路由)
+    from .routes import ingredient_bp, recipe_bp
     app.register_blueprint(ingredient_bp)
     app.register_blueprint(recipe_bp)
 

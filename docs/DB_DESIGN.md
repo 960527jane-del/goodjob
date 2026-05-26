@@ -1,42 +1,41 @@
-# 資料庫設計文件 (DB Design) - 隨食隨地
+# 資料庫設計 - 智慧食譜推薦系統 (F-02)
 
-本文件詳細說明了隨食隨地專案的資料庫設計，包含實體關係圖 (ER 圖)、資料表說明，以及用於建表的 SQL 語法與 Python Model 對應。在 MVP 階段，核心聚焦於「食材」的增刪改查。
+本文件依據前期的設計規劃，定義了「我的材料庫」底層資料庫的結構與關聯，並提供對應的建表語法。
 
 ## 1. ER 圖（實體關係圖）
 
-目前 MVP 的核心實體為「食材 (Ingredient)」。未來可以擴充使用者 (User)、食譜 (Recipe) 甚至虛擬寵物 (Pet) 等實體。
+本系統的核心在於管理使用者的可用食材，作為向外部 API 請求食譜推薦的基礎。由於目前為 MVP 版本，主要設計 `ingredients` 資料表。
 
 ```mermaid
 erDiagram
-    INGREDIENT {
-        INTEGER id PK "主鍵"
-        TEXT name "食材名稱"
-        REAL quantity "數量"
-        TEXT unit "單位 (如：個, 克, 毫升)"
-        TEXT expiry_date "保存期限 (YYYY-MM-DD)"
-        TEXT created_at "建立時間"
-    }
+  INGREDIENTS {
+    integer id PK "主鍵"
+    string name "食材名稱"
+    real quantity "數量"
+    string unit "單位 (如: g, 顆)"
+    date expiry_date "有效期限 (YYYY-MM-DD)"
+    datetime created_at "建立時間"
+  }
 ```
 
 ## 2. 資料表詳細說明
 
-### `ingredients` (食材庫存表)
-記錄使用者目前擁有的所有食材資訊。
+### `ingredients` (我的材料庫)
+儲存使用者目前擁有的食材清單，作為食譜推薦系統的查詢基準。
 
 | 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `id` | INTEGER | 是 | Primary Key，自動遞增。唯一識別每筆食材紀錄。 |
-| `name` | TEXT | 是 | 食材名稱，例如「高麗菜」、「雞胸肉」。 |
-| `quantity` | REAL | 是 | 食材的數量。使用 REAL 支援小數（如 0.5 顆）。 |
-| `unit` | TEXT | 否 | 食材的單位，例如「顆」、「克」、「毫升」。方便呈現與辨識。 |
-| `expiry_date` | TEXT | 否 | 食材的保存期限。建議使用 ISO 8601 日期格式字串 `YYYY-MM-DD` 儲存，方便排序與過期提醒。 |
-| `created_at` | TEXT | 是 | 記錄此筆食材新增到系統中的時間戳記，以 ISO 格式儲存。 |
+| :--- | :--- | :---: | :--- |
+| `id` | INTEGER | ✅ | 主鍵 (Primary Key)，自動遞增 |
+| `name` | TEXT | ✅ | 食材名稱（例如：雞肉、洋蔥、番茄） |
+| `quantity` | REAL | ✅ | 剩餘數量 |
+| `unit` | TEXT | ✅ | 數量單位（例如：g, kg, 顆, 把） |
+| `expiry_date` | TEXT | ❌ | 有效期限，ISO 格式 `YYYY-MM-DD`，用於優先推薦即期食材 |
+| `created_at` | DATETIME | ✅ | 建立時間，預設為 `CURRENT_TIMESTAMP` |
 
 ## 3. SQL 建表語法
 
-請參考專案中的 `database/schema.sql`。
+SQLite 建表語法已儲存於 `database/schema.sql`，可用於初始化系統資料庫。
 
 ## 4. Python Model 程式碼
 
-我們採用 Python 內建的 `sqlite3` 模組來實作資料庫連線與操作，以保持架構輕量。
-對應的 CRUD 方法已經實作於 `app/models/ingredient.py` 中。
+處理對 SQLite 資料庫的 CRUD (建立、讀取、更新、刪除) 操作邏輯，已實作於 `app/models/ingredient.py`，使用 Python 內建的 `sqlite3` 模組，保持系統輕量化。

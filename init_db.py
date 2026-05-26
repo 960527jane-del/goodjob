@@ -1,11 +1,15 @@
-import sqlite3
-import os
+from app import create_app
+from app.models import db
+from app.models.user import User
 
-os.makedirs('instance', exist_ok=True)
-db_path = os.path.join('instance', 'database.db')
-schema_path = os.path.join('database', 'schema.sql')
+app = create_app()
 
-with sqlite3.connect(db_path) as conn:
-    with open(schema_path, 'r', encoding='utf-8') as f:
-        conn.executescript(f.read())
-print("Database initialized successfully at", db_path)
+with app.app_context():
+    db.create_all()
+    if not User.query.get(1):
+        test_user = User(username='Test User', email='test@example.com')
+        db.session.add(test_user)
+        db.session.commit()
+        print("Test user created!")
+    else:
+        print("Database already initialized.")

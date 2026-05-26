@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow border-0 rounded-4 overflow-hidden">
+            <div class="card-header text-center bg-white py-4 border-0">
+                <h2 class="fw-bold mb-0" style="color: #333;">🐶 {{ pet.name }}</h2>
+            </div>
+            <div class="card-body p-5 text-center bg-light">
+                <!-- 寵物動畫區域 -->
+                <div class="mb-4" id="pet-avatar" style="font-size: 100px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    🐕
+                </div>
+                
+                <div class="row justify-content-center mb-4">
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold text-muted">Lv. <span id="pet-level" class="text-dark">{{ pet.level }}</span></span>
+                            <span class="text-muted"><span id="pet-exp" class="text-dark fw-bold">{{ pet.exp }}</span> / 100 EXP</span>
+                        </div>
+                        <div class="progress shadow-sm" style="height: 24px; border-radius: 12px; background-color: #e9ecef;">
+                            <div id="exp-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ pet.exp }}%; background-color: #ffc107;" aria-valuenow="{{ pet.exp }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-center align-items-center gap-4 mt-5">
+                    <div class="bg-white p-3 rounded-4 shadow-sm border" style="min-width: 120px;">
+                        <span class="d-block text-muted small mb-1 fw-bold">擁有飼料</span>
+                        <span class="fs-4 fw-bold" id="feed-count">🥩 {{ inventory.count }}</span>
+                    </div>
+                    
+                    <button id="feed-btn" class="btn btn-lg rounded-pill px-5 shadow fw-bold text-white" style="background-color: #ff6b6b; border: none; transition: transform 0.2s;" {% if inventory.count < 1 %}disabled{% endif %}>
+                        餵食寵物
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('feed-btn').addEventListener('click', function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 餵食中...';
+        
+        fetch('{{ url_for("pet.feed_pet") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                // 更新畫面資料
+                document.getElementById('pet-exp').innerText = data.new_exp;
+                document.getElementById('pet-level').innerText = data.new_level;
+                document.getElementById('feed-count').innerText = '🥩 ' + data.remaining_feed;
+                document.getElementById('exp-bar').style.width = data.new_exp + '%';
+                
+                // 動畫效果
+                const avatar = document.getElementById('pet-avatar');
+                avatar.style.transform = 'scale(1.3) translateY(-10px)';
+                setTimeout(() => {
+                    avatar.style.transform = 'scale(1) translateY(0)';
+                }, 400);
+                
+                if(data.level_up) {
+                    setTimeout(() => {
+                        alert('🎉 恭喜！你的寵物升級了！目前等級：Lv.' + data.new_level);
+                    }, 500);
+                }
+                
+                if(data.remaining_feed < 1) {
+                    btn.disabled = true;
+                } else {
+                    btn.disabled = false;
+                }
+                btn.innerHTML = '餵食寵物';
+            } else {
+                alert(data.error);
+                btn.disabled = false;
+                btn.innerHTML = '餵食寵物';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('發生錯誤，請稍後再試！');
+            btn.disabled = false;
+            btn.innerHTML = '餵食寵物';
+        });
+    });
+</script>
+{% endblock %}

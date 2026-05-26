@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4 fw-bold">🍳 烹飪回報</h2>
+                <p class="text-center text-muted mb-4">完成料理後上傳照片，即可獲得虛擬飼料獎勵！</p>
+                
+                <form action="{{ url_for('cooking.submit_report') }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="image" class="form-label fw-bold">上傳料理照片</label>
+                        <input class="form-control form-control-lg bg-light" type="file" id="image" name="image" accept="image/*">
+                    </div>
+                    
+                    <div class="form-check mb-4 d-flex align-items-center">
+                        <input class="form-check-input me-2 shadow-sm" type="checkbox" value="true" id="completed" name="completed" style="transform: scale(1.2);">
+                        <label class="form-check-label text-muted" for="completed">
+                            我已完成料理（若無法拍照可直接勾選）
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm text-white fw-bold" style="background-color: #4CAF50; border: none;">
+                            ✨ 送出並領取飼料
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -18,3 +18,7 @@ instance/
 
 # OS generated files
 .DS_Store
+
+# Uploads
+app/static/uploads/*
+!app/static/uploads/.gitkeep

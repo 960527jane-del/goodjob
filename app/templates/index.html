@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 fw-bold mb-4" style="color: #ff6b6b;">歡迎來到「隨食隨地」</h1>
+        <p class="lead mb-5 text-muted">結合 AI 辨識與寵物養成，讓烹飪變得像遊戲一樣有趣，同時達成惜食的目標！</p>
+        
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+            <a href="{{ url_for('cooking.report_page') }}" class="btn btn-primary btn-lg px-4 gap-3 rounded-pill shadow-sm" style="background-color: #ff6b6b; border: none;">
+                🍳 開始回報料理
+            </a>
+            <a href="{{ url_for('pet.pet_page') }}" class="btn btn-outline-secondary btn-lg px-4 rounded-pill shadow-sm">
+                🐶 查看我的寵物
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

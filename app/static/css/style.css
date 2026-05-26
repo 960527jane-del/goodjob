@@ -1,0 +1,142 @@
+body {
+    background-color: #fcf8f2; /* Soft warm background */
+    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Typography & Colors */
+.text-primary {
+    color: #ff7675 !important;
+}
+
+.bg-primary {
+    background-color: #ff7675 !important;
+}
+
+.btn-primary {
+    background-color: #ff7675;
+    border-color: #ff7675;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #d63031;
+    border-color: #d63031;
+    box-shadow: 0 4px 10px rgba(214, 48, 49, 0.3);
+}
+
+.btn-outline-danger {
+    color: #ff7675;
+    border-color: #ff7675;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ff7675;
+    color: #fff;
+}
+
+.btn-danger {
+    background-color: #ff7675;
+    border-color: #ff7675;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%) !important;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+}
+
+.navbar-nav .nav-link:hover {
+    transform: translateY(-2px);
+}
+
+/* Cards */
+.recipe-card {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.recipe-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+}
+
+.profile-card {
+    background: #fff;
+    border-radius: 20px;
+}
+
+.achievements-card {
+    background: #fff;
+    border-radius: 20px;
+}
+
+.stat-box {
+    border: 1px solid #f1f2f6;
+    transition: transform 0.2s;
+}
+
+.stat-box:hover {
+    transform: scale(1.05);
+}
+
+/* Achievement Badges */
+.achievement-badge {
+    background-color: #fff;
+    border: 2px solid transparent;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.achievement-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.achievement-badge.unlocked {
+    border-color: #ffeaa7;
+    background: linear-gradient(145deg, #fff 0%, #fffdf2 100%);
+    box-shadow: 0 8px 15px rgba(253, 203, 110, 0.15);
+}
+
+.achievement-badge.unlocked:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(253, 203, 110, 0.25);
+    border-color: #fdcb6e;
+}
+
+.achievement-badge.unlocked:hover .achievement-icon {
+    transform: scale(1.25) rotate(10deg);
+}
+
+.achievement-badge.locked {
+    filter: grayscale(100%);
+    opacity: 0.55;
+    border-color: #dfe6e9;
+    background-color: #fdfdfd;
+}
+
+.achievement-badge.locked:hover {
+    opacity: 0.8;
+    filter: grayscale(80%);
+}
+
+/* Alerts */
+.alert {
+    border-radius: 12px;
+    border: none;
+}

@@ -5,45 +5,81 @@
 {% block content %}
 <div class="row justify-content-center mt-4">
     <div class="col-md-8 col-lg-6 text-center">
-        <div class="card shadow-sm rounded-4 border-0">
-            <div class="card-body p-5">
-                <h2 class="card-title mb-4 fw-bold text-success">{{ pet.name if pet else '尚未建立寵物' }}</h2>
+        <!-- 採用 glass-card，並隨寵物主色動態變化陰影效果 -->
+        <div class="glass-card shadow-lg border-0" 
+             style="border-color: rgba(255, 255, 255, 0.15) !important;
+                    box-shadow: 0 10px 40px rgba({{ 139 if not pet else (238 if pet.element == 'fire' else (0 if pet.element == 'nature' else 255)) }}, 
+                                                 {{ 92 if not pet else (90 if pet.element == 'fire' else (184 if pet.element == 'nature' else 159)) }}, 
+                                                 {{ 246 if not pet else (36 if pet.element == 'fire' else (148 if pet.element == 'nature' else 67)) }}, 0.2) !important;">
+            
+            <div class="card-body p-4">
+                <!-- 寵物名字與種族徽章 -->
+                <h2 class="card-title mb-2 fw-bold text-white" id="pet-display-name">
+                    {{ pet.name if pet else '尚未領養寵物' }}
+                </h2>
+                <div class="mb-4">
+                    <span class="badge rounded-pill px-3 py-2 fs-6" 
+                          style="background: linear-gradient(135deg, {{ pet.color_primary if pet else '#8B5CF6' }}, {{ pet.color_secondary if pet else '#EC4899' }}); color: #fff;">
+                        {{ pet.stage_emoji if pet else '🥚' }} {{ pet.species_name if pet else '小食怪' }} · {{ pet.stage_name if pet else '食怪蛋' }}
+                    </span>
+                </div>
                 
-                <!-- 寵物圖片區塊 -->
-                <div class="pet-image mb-4 position-relative">
-                    <!-- 由於沒有實際圖片素材，用一個 FontAwesome icon 代替，並隨等級改變大小與顏色 -->
-                    <div id="pet-avatar-container" class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 200px; height: 200px; border: 4px solid #198754;">
-                        <i id="pet-avatar-icon" class="fa-solid fa-cat text-success" style="font-size: {{ 5 + (pet.level if pet else 1) }}rem; transition: all 0.5s ease;"></i>
+                <!-- 寵物圖片/虛擬視覺區塊 -->
+                <div class="pet-image mb-5 position-relative">
+                    <div id="pet-avatar-container" class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-lg" 
+                         style="width: 220px; height: 220px; 
+                                border: 4px solid {{ pet.color_primary if pet else '#8B5CF6' }};
+                                background: linear-gradient(135deg, {{ pet.color_secondary if pet else 'rgba(255,255,255,0.05)' }}, rgba(255,255,255,0.15)) !important;">
+                        
+                        <!-- 放大 Emoji 的趣味微動態效果 -->
+                        <span id="pet-avatar-emoji" style="font-size: 6.5rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            {{ pet.stage_emoji if pet else '🥚' }}
+                        </span>
                     </div>
-                    <!-- 升級提示動畫元件 -->
-                    <div id="level-up-badge" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-50 translate-middle" style="display: none; font-size: 1.2rem; transform: scale(0);">
-                        升級啦！🎉
+                    
+                    <!-- 升級提示動畫 -->
+                    <div id="level-up-badge" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-50 translate-middle shadow-lg" 
+                         style="display: none; font-size: 1.3rem; z-index: 10; padding: 0.6rem 1.5rem; transform: scale(0);">
+                        🎉 升級啦！進化在即！
                     </div>
                 </div>
                 
                 <!-- 狀態資訊與進度條 -->
                 <div class="pet-status mb-4 text-start">
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <span class="fs-5 fw-bold">Lv. <span id="pet-level" class="text-success">{{ pet.level if pet else 1 }}</span></span>
-                        <small class="text-muted"><span id="pet-exp">{{ (pet.exp % 100) if pet else 0 }}</span> / 100 EXP</small>
+                        <span class="fs-5 fw-bold text-white">
+                            Lv. <span id="pet-level" style="color: {{ pet.color_primary if pet else '#EC4899' }};">{{ pet.level if pet else 1 }}</span>
+                        </span>
+                        <small class="text-muted">
+                            <span id="pet-exp-remaining">{{ pet.exp_remaining if pet else 0 }}</span> / 
+                            <span id="pet-exp-needed">{{ pet.exp_to_next_level if pet else 50 }}</span> EXP
+                        </small>
                     </div>
                     
-                    <div class="progress" style="height: 20px; border-radius: 10px;">
-                        {% set exp_percent = (pet.exp % 100) if pet else 0 %}
-                        <div id="pet-progress" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ exp_percent }}%; transition: width 0.5s ease-in-out;" aria-valuenow="{{ exp_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        {% set exp_percent = pet.exp_progress if pet else 0 %}
+                        <div id="pet-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: {{ exp_percent }}%; 
+                                    background: linear-gradient(to right, {{ pet.color_primary if pet else '#8B5CF6' }}, {{ pet.color_secondary if pet else '#EC4899' }}) !important; 
+                                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);" 
+                             aria-valuenow="{{ exp_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 </div>
                 
                 <!-- 互動按鈕 -->
-                <div class="pet-actions mt-4">
-                    <button id="feed-btn" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm fw-bold">
+                <div class="pet-actions mt-5">
+                    <button id="feed-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold">
                         <i class="fa-solid fa-cookie-bite"></i> 手動餵食
                     </button>
                 </div>
             </div>
+            
         </div>
     </div>
 </div>
+
+<!-- 進化動畫彈窗 (使用 F-06 的彈窗模版以求一致) -->
+{% include 'components/evolution_modal.html' %}
 {% endblock %}
 
 {% block scripts %}
@@ -51,13 +87,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         const feedBtn = document.getElementById('feed-btn');
         const levelSpan = document.getElementById('pet-level');
-        const expSpan = document.getElementById('pet-exp');
+        const expRemainingSpan = document.getElementById('pet-exp-remaining');
+        const expNeededSpan = document.getElementById('pet-exp-needed');
         const progressBar = document.getElementById('pet-progress');
         const levelUpBadge = document.getElementById('level-up-badge');
-        const petAvatarIcon = document.getElementById('pet-avatar-icon');
+        const petAvatarEmoji = document.getElementById('pet-avatar-emoji');
         
         feedBtn.addEventListener('click', function() {
-            // 停用按鈕避免重複點擊
             feedBtn.disabled = true;
             feedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 餵食中...';
             
@@ -71,19 +107,22 @@
             .then(data => {
                 if (data.success) {
                     const pet = data.pet;
-                    const expPercent = pet.exp % 100;
                     
                     // 更新進度條與文字
-                    progressBar.style.width = expPercent + '%';
-                    progressBar.setAttribute('aria-valuenow', expPercent);
-                    expSpan.textContent = expPercent;
+                    progressBar.style.width = pet.exp_progress + '%';
+                    progressBar.setAttribute('aria-valuenow', pet.exp_progress);
+                    expRemainingSpan.textContent = pet.exp_remaining;
+                    expNeededSpan.textContent = pet.exp_to_next_level;
                     
+                    // 點擊微震動效果
+                    petAvatarEmoji.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        petAvatarEmoji.style.transform = 'scale(1)';
+                    }, 200);
+
                     // 若有升級，則顯示特效並更新等級
                     if (data.pet.is_level_up) {
                         levelSpan.textContent = pet.level;
-                        
-                        // 讓寵物圖示變大一點點作為視覺回饋
-                        petAvatarIcon.style.fontSize = (5 + pet.level) + 'rem';
                         
                         // 顯示升級徽章並執行簡單的 CSS 動畫
                         levelUpBadge.style.display = 'block';
@@ -97,6 +136,14 @@
                                 levelUpBadge.style.display = 'none';
                             }, 500);
                         }, 3000);
+                    }
+
+                    // 檢查是否觸發了進化 (evolution)
+                    if (data.pet.evolution && data.pet.evolution.evolved) {
+                        // 延遲一點點展現進化彈窗，體驗更佳
+                        setTimeout(() => {
+                            showEvolutionModal(data.pet.evolution);
+                        }, 800);
                     }
                 } else {
                     alert('發生錯誤: ' + data.message);
@@ -112,6 +159,40 @@
                 feedBtn.innerHTML = '<i class="fa-solid fa-cookie-bite"></i> 手動餵食';
             });
         });
+
+        // 綁定進化彈窗關閉按鈕
+        const confirmBtn = document.getElementById('evolution-confirm-btn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+        
+        const backdrop = document.getElementById('modal-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+
+        function showEvolutionModal(evolution) {
+            const modal = document.getElementById('evolution-modal');
+            if (!modal) return;
+
+            const oldEmoji = document.getElementById('evo-old-emoji');
+            const newEmoji = document.getElementById('evo-new-emoji');
+            const oldName = document.getElementById('evo-old-name');
+            const newName = document.getElementById('evo-new-name');
+            const desc = document.getElementById('evo-description');
+
+            if (oldEmoji) oldEmoji.textContent = evolution.old_stage.emoji;
+            if (newEmoji) newEmoji.textContent = evolution.new_stage.emoji;
+            if (oldName) oldName.textContent = evolution.old_stage.name;
+            if (newName) newName.textContent = evolution.new_stage.name;
+            if (desc) desc.textContent = evolution.new_stage.description || '你的寵物進化成了全新的型態！';
+
+            modal.style.display = 'flex';
+        }
     });
 </script>
 {% endblock %}

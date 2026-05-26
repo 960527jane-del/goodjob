@@ -1,58 +1,49 @@
-# API 路由與頁面設計 - 虛擬寵物養成系統 (F-03)
+# 隨「食」隨地 — 路由與 API 設計文件 (Routes)
 
-本文件定義「虛擬寵物養成系統」中，前端頁面與後端 API 的路由對應關係。
-
----
-
-## 1. 路由總覽表格
-
-| 功能 | HTTP 方法 | URL 路徑 | 對應模板 | 說明 |
-| :--- | :---: | :--- | :--- | :--- |
-| **首頁重導向** | `GET` | `/` | — | 首頁暫時重導向至寵物頁面 `/pet` |
-| **顯示寵物頁面** | `GET` | `/pet` | `templates/pet/index.html` | 讀取使用者的寵物資料並渲染畫面 |
-| **手動餵食寵物** | `POST` | `/pet/feed` | — (回傳 JSON) | 增加寵物經驗值，回傳更新後的狀態 |
+本文件詳細列出系統中所有路由與 API 端點、其對應的控制器(Blueprint)、HTTP 方法、輸入輸出以及渲染的模板，以作為前後端協作之核心指引。
 
 ---
 
-## 2. 每個路由的詳細說明
+## 1. 路由規劃總覽表
 
-### 2.1 顯示寵物頁面
-- **路徑**：`GET /pet`
-- **輸入**：無（MVP 階段預設從 `session` 或 hardcode 取得 `user_id = 1`）
-- **處理邏輯**：
-  1. 呼叫 `Pet.get_by_user_id(user_id)` 取得寵物資料。
-  2. 若使用者無寵物，則可自動為其建立一隻預設寵物 `Pet.create(user_id, "預設寵物")`。
-- **輸出**：渲染 `pet/index.html`，並將 `pet` 物件傳入作為模板變數。
-- **錯誤處理**：若資料庫查詢失敗，回傳 500 錯誤頁面。
-
-### 2.2 手動餵食寵物
-- **路徑**：`POST /pet/feed`
-- **輸入**：透過 AJAX 請求（MVP 階段預設 `user_id = 1`），無須額外參數。
-- **處理邏輯**：
-  1. 確認寵物是否存在。
-  2. 呼叫 `Pet.add_exp(pet_id, 10)` (假設每次餵食增加 10 經驗值)。
-- **輸出**：回傳 JSON 格式：
-  ```json
-  {
-      "success": true,
-      "pet": {
-          "id": 1,
-          "exp": 10,
-          "level": 1,
-          "is_level_up": false
-      }
-  }
-  ```
-- **錯誤處理**：若寵物不存在，回傳 HTTP 404 及錯誤訊息 JSON。
+| 功能模組 | HTTP 方法 | URL 路徑 | 對應控制器與方法 | 渲染模板 / 回傳格式 | 說明 |
+| :--- | :---: | :--- | :--- | :--- | :--- |
+| **我的材料庫** | `GET` | `/` | `ingredient.index` | `ingredients/index.html` | 列出目前所有食材與新增食材表單 |
+| **新增食材** | `POST` | `/ingredient/add` | `ingredient.add` | 重導向至 `/` | 接收新增表單，寫入庫存後導回 |
+| **編輯食材頁面**| `GET` | `/ingredient/edit/<id>`| `ingredient.edit` | `ingredients/edit.html` | 呈現單一食材修改表單 |
+| **更新食材** | `POST` | `/ingredient/update/<id>`| `ingredient.update`| 重導向至 `/` | 接收編輯欄位更新庫存後導回 |
+| **刪除食材** | `POST` | `/ingredient/delete/<id>`| `ingredient.delete`| 重導向至 `/` | 刪除指定食材後導回 |
+| **推薦食譜** | `GET` | `/recipes/recommend` | `recipe.recommend` | `recipes/recommend.html` | 根據現有材料推薦合適食譜 (Skeleton) |
+| **虛擬寵物主頁**| `GET` | `/pet` | `pet.pet_index` | `pet/index.html` | 呈現寵物數據、等級、餵食與進化觸發 |
+| **手動餵食互動**| `POST` | `/pet/feed` | `pet.feed_pet` | JSON | 餵食加經驗值，自動升級進化並回傳 |
+| **圖鑑主頁面** | `GET` | `/collection` | `collection.collection_index`| `collection/index.html` | 顯示所有寵物圖鑑與解鎖進度 |
+| **型態詳情頁面**| `GET` | `/collection/<id>` | `collection.collection_detail`| `collection/detail.html` | 查看單一進化階段型態之風味說明與關係圖 |
+| **API：寵物狀態** | `GET` | `/api/pet/status` | `collection.api_pet_status`| JSON | 提供非同步輪詢或讀取寵物最新狀態 |
+| **API：加經驗值** | `POST` | `/api/pet/add-exp` | `collection.api_add_exp` | JSON | 供其他遊戲化功能或開發測試調用加 EXP |
+| **API：檢查進化** | `POST` | `/api/pet/evolve` | `collection.api_evolve` | JSON | 提供手動觸發進化狀態判定 |
+| **API：圖鑑資料** | `GET` | `/api/collection` | `collection.api_collection` | JSON | 回傳所有進化階段之解鎖清單與進度 |
+| **API：型態詳情** | `GET` | `/api/collection/<id>`| `collection.api_collection_detail`| JSON | 取得單一進化階段型態之 API 格式資料 |
 
 ---
 
-## 3. Jinja2 模板清單
+## 2. 核心路由處理邏輯
 
-以下為本功能需建立的 HTML 模板檔案：
+### 2.1 虛擬寵物首頁 (`GET /pet`)
+- **業務邏輯**：
+  1. 呼叫 `Pet.get_by_user_id(DEV_USER_ID)` 獲取當前使用者的寵物。
+  2. 若資料庫無記錄，則自動調用 `Pet.create(DEV_USER_ID, "小食怪")` 建立一隻初始寵物。
+  3. 將包含 species 與 stages 關聯欄位的 `pet` 字典傳入 `pet/index.html` 進行渲染。
 
-1. `templates/base.html`
-   - **說明**：全站共用的基本骨架，包含 `<head>` 區塊、引入的 CSS/JS、共用導覽列。
-2. `templates/pet/index.html`
-   - **說明**：寵物專屬頁面。包含寵物圖片顯示區塊、等級與經驗值進度條、以及「手動餵食」互動按鈕。
-   - **繼承**：`{% extends "base.html" %}`
+### 2.2 手動餵食 (`POST /pet/feed`)
+- **業務邏輯**：
+  1. 呼叫 `Pet.add_exp(pet_id, 10)` (每次手動餵食增加 10 經驗值)。
+  2. 控制器內部的 `Pet.add_exp` 會將流程委託至 `evolution_service.add_exp` 處理。
+  3. `evolution_service` 執行總經驗值加總，並呼叫 `calculate_level_from_exp` 計算新等級。
+  4. 若等級上升，自動檢查並調用 `check_and_evolve` 判定進化並解鎖對應圖鑑。
+  5. 最終回傳包含最新 EXP、進度條比率、等級、升級旗標、進化型態等資訊之 JSON。
+
+### 2.3 圖鑑篩選與展示 (`GET /collection`)
+- **業務邏輯**：
+  1. 呼叫 `collection_model.get_all_stages()` 取得所有種族與進化階段。
+  2. 呼叫 `collection_model.get_user_collection(DEV_USER_ID)` 取得已解鎖的階段 ID 集合 (Set)。
+  3. 透過 `in` 運算子於 HTML 中判定特定卡片是否顯示為彩色解鎖狀態或灰色鎖定狀態。

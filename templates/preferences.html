@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4 mt-3">
+    <div class="col text-center">
+        <h1 class="display-5 fw-bold text-primary mb-2"><i class="fas fa-sliders-h me-2"></i>偏好設定</h1>
+        <p class="lead text-muted">告訴我們你的飲食偏好，讓食譜推薦更貼合你的需求</p>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('preferences') }}">
+            <!-- 飲食類型 -->
+            <div class="pref-section card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1"><i class="fas fa-leaf text-success me-2"></i>飲食類型</h4>
+                    <p class="text-muted small mb-3">選擇最符合你飲食習慣的類型</p>
+                    <div class="row g-3">
+                        {% for value, label in diet_type_options.items() %}
+                        <div class="col-6 col-md-3">
+                            <input type="radio" class="btn-check" name="diet_type" id="diet_{{ value }}" value="{{ value }}"
+                                   {{ 'checked' if pref.diet_type == value }}>
+                            <label class="btn btn-outline-primary w-100 rounded-3 py-3 diet-option-btn" for="diet_{{ value }}">
+                                {% if value == 'omnivore' %}🍖{% elif value == 'vegetarian' %}🥬{% elif value == 'vegan' %}🌱{% else %}🐟{% endif %}
+                                <br><small class="fw-bold">{{ label }}</small>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 辣度偏好 -->
+            <div class="pref-section card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1"><i class="fas fa-pepper-hot text-danger me-2"></i>辣度偏好</h4>
+                    <p class="text-muted small mb-3">是否接受辣的食譜？</p>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check form-switch form-switch-lg">
+                            <input class="form-check-input spicy-toggle" type="checkbox" id="spicy_ok" name="spicy_ok"
+                                   {{ 'checked' if pref.spicy_ok }}>
+                            <label class="form-check-label fw-bold ms-2" for="spicy_ok" id="spicy_label">
+                                {% if pref.spicy_ok %}
+                                🌶️ 我可以吃辣！
+                                {% else %}
+                                🚫 不要辣的食譜
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 過敏原 -->
+            <div class="pref-section card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1"><i class="fas fa-exclamation-triangle text-warning me-2"></i>過敏原</h4>
+                    <p class="text-muted small mb-3">選擇你需要避免的過敏原，含有這些成分的食譜將被過濾掉</p>
+                    <div class="row g-2">
+                        {% for allergen in allergen_options %}
+                        <div class="col-6 col-sm-4 col-md-3">
+                            <input type="checkbox" class="btn-check" name="allergens" id="allergen_{{ loop.index }}" value="{{ allergen }}"
+                                   {{ 'checked' if allergen in user_allergens }}>
+                            <label class="btn btn-outline-warning w-100 rounded-pill allergen-btn" for="allergen_{{ loop.index }}">
+                                {% if allergen == '花生' %}🥜{% elif allergen == '牛奶' %}🥛{% elif allergen == '蛋' %}🥚{% elif allergen == '麩質' %}🌾{% elif allergen == '海鮮' %}🦐{% elif allergen == '堅果' %}🌰{% else %}🫘{% endif %}
+                                {{ allergen }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 烹飪程度 -->
+            <div class="pref-section card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1"><i class="fas fa-hat-chef text-info me-2"></i>烹飪程度</h4>
+                    <p class="text-muted small mb-3">你的料理程度是？</p>
+                    <div class="row g-3">
+                        {% for value, label in cooking_level_options.items() %}
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="cooking_level" id="level_{{ value }}" value="{{ value }}"
+                                   {{ 'checked' if pref.cooking_level == value }}>
+                            <label class="btn btn-outline-info w-100 rounded-3 py-3 level-option-btn" for="level_{{ value }}">
+                                {% if value == 'beginner' %}👶{% elif value == 'intermediate' %}👨‍🍳{% else %}🧑‍🍳{% endif %}
+                                <br><small class="fw-bold">{{ label }}</small>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 烹飪時間 -->
+            <div class="pref-section card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1"><i class="fas fa-clock text-primary me-2"></i>烹飪時間上限</h4>
+                    <p class="text-muted small mb-3">你最多願意花多少時間做一道料理？</p>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range flex-grow-1" id="max_cooking_time" name="max_cooking_time"
+                               min="10" max="120" step="5" value="{{ pref.max_cooking_time or 60 }}"
+                               oninput="document.getElementById('time_display').textContent = this.value + ' 分鐘'">
+                        <span class="badge bg-primary rounded-pill px-3 py-2 fs-6" id="time_display" style="min-width: 80px;">{{ pref.max_cooking_time or 60 }} 分鐘</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mt-1">
+                        <span>10 分鐘</span>
+                        <span>120 分鐘</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 儲存按鈕 -->
+            <div class="text-center mb-4">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">
+                    <i class="fas fa-save me-2"></i>儲存偏好設定
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 辣度 toggle 標籤動態更新
+document.getElementById('spicy_ok').addEventListener('change', function() {
+    const label = document.getElementById('spicy_label');
+    if (this.checked) {
+        label.innerHTML = '🌶️ 我可以吃辣！';
+    } else {
+        label.innerHTML = '🚫 不要辣的食譜';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}我的材料庫 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- 左側：新增表單 -->
+    <div class="col-lg-4">
+        <div class="glass-card sticky-top" style="top: 100px;">
+            <h3 class="mb-4">新增食材</h3>
+            <form action="{{ url_for('ingredient.add') }}" method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label">食材名稱 *</label>
+                    <input type="text" class="form-control" id="name" name="name" required placeholder="例如：高麗菜">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="quantity" class="form-label">數量 *</label>
+                        <input type="number" step="0.1" class="form-control" id="quantity" name="quantity" required placeholder="例如：0.5">
+                    </div>
+                    <div class="col-6">
+                        <label for="unit" class="form-label">單位</label>
+                        <input type="text" class="form-control" id="unit" name="unit" placeholder="例如：顆">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="expiry_date" class="form-label">保存期限</label>
+                    <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">加入冰箱</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 右側：食材列表 -->
+    <div class="col-lg-8">
+        <h2 class="mb-4">我的材料庫</h2>
+        {% if ingredients %}
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for item in ingredients %}
+                <div class="col">
+                    <div class="glass-card p-3 h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h4 class="mb-0">{{ item.name }}</h4>
+                            <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #C4B5FD; border: 1px solid rgba(139, 92, 246, 0.4); font-size: 0.9em; padding: 0.5em 0.8em;">
+                                {{ item.quantity }} {{ item.unit }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-muted small mb-4">
+                            {% if item.expiry_date %}
+                                🕒 保存期限：{{ item.expiry_date }}
+                            {% else %}
+                                🕒 未設定期限
+                            {% endif %}
+                        </p>
+
+                        <div class="mt-auto d-flex gap-2">
+                            <a href="{{ url_for('ingredient.edit', id=item.id) }}" class="btn btn-sm btn-outline-light flex-grow-1">編輯</a>
+                            <form action="{{ url_for('ingredient.delete', id=item.id) }}" method="POST" style="display: inline;" class="flex-grow-1" onsubmit="return confirm('確定要刪除「{{ item.name }}」嗎？');">
+                                <button type="submit" class="btn btn-sm btn-danger w-100">刪除</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="glass-card text-center py-5 mt-3">
+                <h4 class="text-muted mb-3" style="font-size: 3rem;">🧊</h4>
+                <h5 class="text-white mb-2">冰箱目前空空的</h5>
+                <p class="text-muted">在左側填寫表單，新增您的第一個食材吧！</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

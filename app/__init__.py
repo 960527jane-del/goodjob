@@ -24,19 +24,3 @@ def create_app():
     app.register_blueprint(recipe_bp)
 
     return app
-
-def init_db(app=None):
-    """
-    初始化資料庫。
-    可用於獨立腳本執行，或是後續 CLI 指令調用。
-    """
-    if app is None:
-        app = create_app()
-        
-    db_path = app.config['DATABASE']
-    schema_path = os.path.join(os.path.dirname(app.root_path), 'database', 'schema.sql')
-    
-    with sqlite3.connect(db_path) as conn:
-        with open(schema_path, 'r', encoding='utf-8') as f:
-            conn.executescript(f.read())
-    print(f"資料庫已初始化於：{db_path}")

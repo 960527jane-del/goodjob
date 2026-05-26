@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="auth-card card shadow border-0 p-4">
+            <div class="text-center mb-4">
+                <div class="auth-icon mb-3">🍳</div>
+                <h2 class="fw-bold text-dark">建立帳號</h2>
+                <p class="text-muted">加入隨「食」隨地，開始你的烹飪冒險！</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-bold">
+                        <i class="fas fa-envelope me-1 text-primary"></i>Email
+                    </label>
+                    <input type="email" class="form-control form-control-lg rounded-3" id="email" name="email"
+                           value="{{ email|default('') }}" placeholder="you@example.com" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-bold">
+                        <i class="fas fa-at me-1 text-primary"></i>帳號名稱
+                    </label>
+                    <input type="text" class="form-control form-control-lg rounded-3" id="username" name="username"
+                           value="{{ username|default('') }}" placeholder="your_username" required>
+                    <div class="form-text">用於識別你的帳號</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="display_name" class="form-label fw-bold">
+                        <i class="fas fa-smile me-1 text-primary"></i>顯示名稱 <span class="text-muted fw-normal">(選填)</span>
+                    </label>
+                    <input type="text" class="form-control form-control-lg rounded-3" id="display_name" name="display_name"
+                           value="{{ display_name|default('') }}" placeholder="你希望被怎麼稱呼？">
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-bold">
+                        <i class="fas fa-lock me-1 text-primary"></i>密碼
+                    </label>
+                    <input type="password" class="form-control form-control-lg rounded-3" id="password" name="password"
+                           placeholder="至少 4 個字元" required minlength="4">
+                </div>
+
+                <div class="mb-4">
+                    <label for="password_confirm" class="form-label fw-bold">
+                        <i class="fas fa-lock me-1 text-primary"></i>確認密碼
+                    </label>
+                    <input type="password" class="form-control form-control-lg rounded-3" id="password_confirm" name="password_confirm"
+                           placeholder="再輸入一次密碼" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow-sm mb-3">
+                    <i class="fas fa-user-plus me-2"></i>註冊帳號
+                </button>
+            </form>
+
+            <div class="text-center mt-2">
+                <p class="text-muted mb-0">
+                    已經有帳號了？
+                    <a href="{{ url_for('login') }}" class="text-primary fw-bold text-decoration-none">登入</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

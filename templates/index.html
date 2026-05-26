@@ -1,40 +1,80 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row mb-5 mt-3">
+<div class="row mb-4 mt-3">
     <div class="col text-center">
-        <h1 class="display-5 fw-bold text-primary mb-3">食譜大廳</h1>
+        <h1 class="display-5 fw-bold text-primary mb-2">食譜大廳</h1>
         <p class="lead text-muted">探索美味食譜，動手做做看，解鎖可愛的成就吧！</p>
+        {% if current_user.is_authenticated and filtered_count > 0 %}
+        <span class="badge bg-light text-dark shadow-sm px-3 py-2 rounded-pill">
+            <i class="fas fa-filter text-primary me-1"></i>已根據偏好過濾 <strong class="text-primary">{{ filtered_count }}</strong> 道
+            <a href="{{ url_for('preferences') }}" class="text-primary ms-1"><i class="fas fa-cog"></i></a>
+        </span>
+        {% elif not current_user.is_authenticated %}
+        <span class="badge bg-light text-muted shadow-sm px-3 py-2 rounded-pill">
+            <a href="{{ url_for('register') }}" class="text-primary fw-bold text-decoration-none">註冊</a> 並設定偏好，獲得個人化推薦
+        </span>
+        {% endif %}
     </div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
     {% for recipe in recipes %}
     <div class="col">
         <div class="card h-100 recipe-card shadow-sm border-0">
-            <img src="{{ recipe.image_url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+            <div class="position-relative">
+                <img src="{{ recipe.image_url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+                {% if recipe.cooking_time %}
+                <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 rounded-pill px-2 py-1">
+                    <i class="fas fa-clock me-1"></i>{{ recipe.cooking_time }}min
+                </span>
+                {% endif %}
+            </div>
             <div class="card-body p-4">
-                <h5 class="card-title fw-bold text-dark">{{ recipe.title }}</h5>
-                <p class="card-text text-muted">{{ recipe.description }}</p>
+                <h5 class="card-title fw-bold text-dark mb-2">{{ recipe.title }}</h5>
+                <p class="card-text text-muted small mb-3">{{ recipe.description }}</p>
+                <div class="recipe-tags mb-2">
+                    {% for tag in recipe.get_tags_list() %}
+                        {% if tag in tag_display %}
+                        <span class="badge rounded-pill recipe-tag-badge me-1 mb-1">{{ tag_display[tag] }}</span>
+                        {% endif %}
+                    {% endfor %}
+                    {% if recipe.difficulty %}
+                    <span class="badge rounded-pill bg-light text-dark border me-1 mb-1">
+                        {% if recipe.difficulty == 'beginner' %}⭐ 簡單{% elif recipe.difficulty == 'intermediate' %}⭐⭐ 中等{% else %}⭐⭐⭐ 進階{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
             </div>
             <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center p-4 pt-0">
-                
-                {% if recipe.id in collections %}
-                <form action="{{ url_for('remove_collection', recipe_id=recipe.id) }}" method="POST" class="d-inline m-0">
-                    <button type="submit" class="btn btn-danger btn-sm px-3 rounded-pill shadow-sm"><i class="fas fa-heart"></i> 已收藏</button>
-                </form>
+                {% if current_user.is_authenticated %}
+                    {% if recipe.id in collections %}
+                    <form action="{{ url_for('remove_collection', recipe_id=recipe.id) }}" method="POST" class="d-inline m-0">
+                        <button type="submit" class="btn btn-danger btn-sm px-3 rounded-pill shadow-sm"><i class="fas fa-heart"></i> 已收藏</button>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('add_collection', recipe_id=recipe.id) }}" method="POST" class="d-inline m-0">
+                        <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill"><i class="far fa-heart"></i> 收藏</button>
+                    </form>
+                    {% endif %}
+                    <form action="{{ url_for('cook_recipe', recipe_id=recipe.id) }}" method="POST" class="d-inline m-0">
+                        <button type="submit" class="btn btn-warning btn-sm text-dark fw-bold px-3 rounded-pill shadow-sm"><i class="fas fa-fire text-danger"></i> 試做</button>
+                    </form>
                 {% else %}
-                <form action="{{ url_for('add_collection', recipe_id=recipe.id) }}" method="POST" class="d-inline m-0">
-                    <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill"><i class="far fa-heart"></i> 收藏</button>
-                </form>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1"></i>登入後操作</a>
                 {% endif %}
-
-                <form action="{{ url_for('cook_recipe', recipe_id=recipe.id) }}" method="POST" class="d-inline m-0">
-                    <button type="submit" class="btn btn-warning btn-sm text-dark fw-bold px-3 rounded-pill shadow-sm"><i class="fas fa-fire text-danger"></i> 試做</button>
-                </form>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
+
+{% if recipes|length == 0 %}
+<div class="text-center py-5">
+    <div style="font-size: 5rem;">🍽️</div>
+    <h3 class="fw-bold mt-3">沒有符合偏好的食譜</h3>
+    <p class="text-muted">試著放寬你的偏好設定</p>
+    <a href="{{ url_for('preferences') }}" class="btn btn-primary rounded-pill px-4"><i class="fas fa-sliders-h me-2"></i>調整偏好</a>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,94 +1,89 @@
+/* ═══════════════════════════════════════
+   隨「食」隨地 — 主題樣式
+   ═══════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;900&display=swap');
+
 body {
-    background-color: #fcf8f2; /* Soft warm background */
-    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fcf8f2;
+    font-family: 'Noto Sans TC', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
 }
 
-/* Typography & Colors */
-.text-primary {
-    color: #ff7675 !important;
-}
-
-.bg-primary {
-    background-color: #ff7675 !important;
-}
+/* ─── 主題色彩 ─── */
+.text-primary { color: #ff7675 !important; }
+.bg-primary { background-color: #ff7675 !important; }
 
 .btn-primary {
-    background-color: #ff7675;
-    border-color: #ff7675;
+    background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%);
+    border: none;
+    transition: all 0.3s ease;
 }
-
 .btn-primary:hover, .btn-primary:focus {
-    background-color: #d63031;
-    border-color: #d63031;
-    box-shadow: 0 4px 10px rgba(214, 48, 49, 0.3);
-}
-
-.btn-outline-danger {
-    color: #ff7675;
-    border-color: #ff7675;
-}
-
-.btn-outline-danger:hover {
-    background-color: #ff7675;
-    color: #fff;
-}
-
-.btn-danger {
-    background-color: #ff7675;
-    border-color: #ff7675;
-}
-
-/* Navbar */
-.navbar {
-    background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%) !important;
-}
-
-.navbar-brand {
-    font-size: 1.5rem;
-}
-
-.navbar-nav .nav-link {
-    font-size: 1.1rem;
-    transition: transform 0.2s;
-}
-
-.navbar-nav .nav-link:hover {
+    background: linear-gradient(135deg, #d63031 0%, #ff7675 100%);
+    box-shadow: 0 6px 20px rgba(214, 48, 49, 0.35);
     transform: translateY(-2px);
 }
 
-/* Cards */
+.btn-outline-danger { color: #ff7675; border-color: #ff7675; }
+.btn-outline-danger:hover { background-color: #ff7675; color: #fff; }
+.btn-danger { background-color: #ff7675; border-color: #ff7675; }
+
+/* ─── 導覽列 ─── */
+.navbar {
+    background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%) !important;
+    padding: 0.8rem 0;
+}
+.navbar-brand { font-size: 1.5rem; letter-spacing: 1px; }
+.navbar-nav .nav-link {
+    font-size: 1.05rem;
+    transition: all 0.25s ease;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem !important;
+}
+.navbar-nav .nav-link:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.15);
+}
+
+/* ─── 食譜卡片 ─── */
 .recipe-card {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     border-radius: 16px;
     overflow: hidden;
     background-color: #fff;
 }
-
 .recipe-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
 }
 
+/* ─── 食譜標籤 ─── */
+.recipe-tag-badge {
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe8e0 100%);
+    color: #d63031;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid #ffcdd2;
+    padding: 0.3em 0.7em;
+}
+
+/* ─── 個人資料卡 ─── */
 .profile-card {
     background: #fff;
     border-radius: 20px;
 }
-
 .achievements-card {
     background: #fff;
     border-radius: 20px;
 }
-
 .stat-box {
     border: 1px solid #f1f2f6;
     transition: transform 0.2s;
 }
+.stat-box:hover { transform: scale(1.05); }
 
-.stat-box:hover {
-    transform: scale(1.05);
-}
-
-/* Achievement Badges */
+/* ─── 成就徽章 ─── */
 .achievement-badge {
     background-color: #fff;
     border: 2px solid transparent;
@@ -100,43 +95,160 @@ body {
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.03);
 }
-
 .achievement-icon {
     font-size: 3.5rem;
     line-height: 1;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
 .achievement-badge.unlocked {
     border-color: #ffeaa7;
     background: linear-gradient(145deg, #fff 0%, #fffdf2 100%);
     box-shadow: 0 8px 15px rgba(253, 203, 110, 0.15);
 }
-
 .achievement-badge.unlocked:hover {
     transform: translateY(-5px);
     box-shadow: 0 12px 20px rgba(253, 203, 110, 0.25);
     border-color: #fdcb6e;
 }
-
 .achievement-badge.unlocked:hover .achievement-icon {
     transform: scale(1.25) rotate(10deg);
 }
-
 .achievement-badge.locked {
     filter: grayscale(100%);
     opacity: 0.55;
     border-color: #dfe6e9;
     background-color: #fdfdfd;
 }
-
 .achievement-badge.locked:hover {
     opacity: 0.8;
     filter: grayscale(80%);
 }
 
-/* Alerts */
+/* ─── 認證頁面（登入/註冊）─── */
+.auth-card {
+    border-radius: 24px;
+    background: #fff;
+    animation: fadeSlideUp 0.5s ease-out;
+}
+.auth-icon {
+    font-size: 4rem;
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.auth-card .form-control {
+    border: 2px solid #f1f2f6;
+    transition: all 0.3s ease;
+}
+.auth-card .form-control:focus {
+    border-color: #ff7675;
+    box-shadow: 0 0 0 4px rgba(255, 118, 117, 0.15);
+}
+
+/* ─── 偏好設定頁面 ─── */
+.pref-section {
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    animation: fadeSlideUp 0.5s ease-out;
+}
+.pref-section:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
+}
+
+/* 飲食類型按鈕 */
+.diet-option-btn {
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+.btn-check:checked + .diet-option-btn {
+    background: linear-gradient(135deg, #ff7675 0%, #fab1a0 100%);
+    border-color: #ff7675;
+    color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(255, 118, 117, 0.3);
+}
+.diet-option-btn:hover {
+    transform: translateY(-3px);
+}
+
+/* 烹飪等級按鈕 */
+.level-option-btn {
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+.btn-check:checked + .level-option-btn {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    border-color: #0984e3;
+    color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(9, 132, 227, 0.3);
+}
+
+/* 過敏原按鈕 */
+.allergen-btn {
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+.btn-check:checked + .allergen-btn {
+    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+    border-color: #e17055;
+    color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(225, 112, 85, 0.3);
+}
+
+/* 辣度 Toggle Switch */
+.form-switch-lg .form-check-input {
+    width: 3.5rem;
+    height: 1.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.form-switch-lg .form-check-input:checked {
+    background-color: #ff7675;
+    border-color: #ff7675;
+    box-shadow: 0 0 8px rgba(255, 118, 117, 0.4);
+}
+
+/* Range Slider */
+.form-range::-webkit-slider-thumb {
+    background: linear-gradient(135deg, #ff7675, #fab1a0);
+}
+.form-range::-webkit-slider-runnable-track {
+    background: #f1f2f6;
+}
+
+/* ─── 通知訊息 ─── */
 .alert {
     border-radius: 12px;
     border: none;
+    animation: fadeSlideUp 0.3s ease-out;
+}
+
+/* ─── 下拉選單 ─── */
+.dropdown-menu {
+    border-radius: 12px;
+    overflow: hidden;
+}
+.dropdown-item {
+    padding: 0.6rem 1.2rem;
+    transition: all 0.2s ease;
+}
+.dropdown-item:hover {
+    background-color: #fff5f5;
+}
+
+/* ─── Footer ─── */
+footer {
+    background: linear-gradient(135deg, #f8f9fa 0%, #fcf8f2 100%);
+    border-top: 1px solid #f1f2f6;
 }

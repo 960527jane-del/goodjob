@@ -2,21 +2,18 @@
 
 {% block content %}
 <div class="row mb-5 mt-3">
-    <!-- User Stats Profile -->
     <div class="col-md-4 mb-4">
         <div class="card shadow border-0 profile-card text-center p-4 h-100">
             <div class="position-relative d-inline-block mx-auto mb-3">
-                <img src="https://ui-avatars.com/api/?name=Test+User&background=ff9a9e&color=fff&size=150&font-size=0.33&bold=true" class="rounded-circle border border-5 border-white shadow-sm" alt="User Avatar" style="width: 120px;">
+                <img src="https://ui-avatars.com/api/?name={{ user.display_name or user.username }}&background=ff9a9e&color=fff&size=150&font-size=0.33&bold=true" class="rounded-circle border border-5 border-white shadow-sm" alt="Avatar" style="width: 120px;">
                 <span class="position-absolute bottom-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-2 border-white shadow-sm px-3 py-2" style="font-size: 0.9rem;">
                     見習廚師
                 </span>
             </div>
-            
-            <h3 class="fw-bold text-dark mt-2">{{ user.username }}</h3>
-            <p class="text-muted small">一起向料理大師邁進吧！</p>
-            
-            <hr class="my-4 text-muted">
-            
+            <h3 class="fw-bold text-dark mt-2">{{ user.display_name or user.username }}</h3>
+            <p class="text-muted small">{{ user.email }}</p>
+            <a href="{{ url_for('preferences') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 mb-3"><i class="fas fa-sliders-h me-1"></i>偏好設定</a>
+            <hr class="my-3 text-muted">
             <div class="row text-center">
                 <div class="col-6">
                     <div class="stat-box p-3 rounded-3 bg-light">
@@ -31,10 +28,27 @@
                     </div>
                 </div>
             </div>
+            {% if user.preference %}
+            <hr class="my-3 text-muted">
+            <div class="text-start px-2">
+                <h6 class="fw-bold mb-2"><i class="fas fa-utensils text-primary me-1"></i>我的飲食偏好</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    <span class="badge bg-light text-dark border">
+                        {% if user.preference.diet_type == 'omnivore' %}🍖 葷食{% elif user.preference.diet_type == 'vegetarian' %}🥬 素食{% elif user.preference.diet_type == 'vegan' %}🌱 全素{% else %}🐟 海鮮素{% endif %}
+                    </span>
+                    <span class="badge bg-light text-dark border">
+                        {% if user.preference.spicy_ok %}🌶️ 可吃辣{% else %}🚫 不吃辣{% endif %}
+                    </span>
+                    <span class="badge bg-light text-dark border">⏱️ {{ user.preference.max_cooking_time }}min</span>
+                    {% for a in user.allergens %}
+                    <span class="badge bg-warning text-dark">⚠️ {{ a.allergen_name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Achievements Wall -->
     <div class="col-md-8 mb-4">
         <div class="card shadow border-0 h-100 achievements-card">
             <div class="card-header bg-transparent border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
@@ -67,7 +81,6 @@
     <div class="col-12 d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold m-0"><i class="fas fa-book-open text-primary me-2"></i>我的收藏食譜</h3>
     </div>
-    
     {% if user.collections %}
         {% for collection in user.collections %}
         <div class="col-md-4 col-lg-3 mb-4">

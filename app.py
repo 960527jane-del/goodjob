@@ -1,18 +1,24 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, UserPreference, UserAllergen, Recipe, Collection, Achievement, UserAchievement
+from sql_models import db, User, UserPreference, UserAllergen, Recipe, Collection, Achievement, UserAchievement
 from app.routes import ingredient_bp, recipe_bp
+from routes.collection_routes import collection_bp
+from config import DATABASE
+from models.db import close_db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key-cute-app'
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['DATABASE'] = DATABASE
+app.teardown_appcontext(close_db)
 
 db.init_app(app)
 app.register_blueprint(ingredient_bp)
 app.register_blueprint(recipe_bp)
+app.register_blueprint(collection_bp)
 
 # ─── Flask-Login 初始化 ───
 login_manager = LoginManager()

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}編輯食材 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="glass-card">
+            <h2 class="mb-4">編輯食材</h2>
+            <form action="{{ url_for('ingredient.update', id=ingredient.id) }}" method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label">食材名稱 *</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ ingredient.name }}" required>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="quantity" class="form-label">數量 *</label>
+                        <input type="number" step="0.1" class="form-control" id="quantity" name="quantity" value="{{ ingredient.quantity }}" required>
+                    </div>
+                    <div class="col-6">
+                        <label for="unit" class="form-label">單位</label>
+                        <input type="text" class="form-control" id="unit" name="unit" value="{{ ingredient.unit or '' }}">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="expiry_date" class="form-label">保存期限</label>
+                    <input type="date" class="form-control" id="expiry_date" name="expiry_date" value="{{ ingredient.expiry_date or '' }}">
+                </div>
+                <div class="d-flex gap-3 mt-5">
+                    <button type="submit" class="btn btn-primary flex-grow-1 py-2">儲存修改</button>
+                    <a href="{{ url_for('ingredient.index') }}" class="btn btn-outline-light px-4 d-flex align-items-center">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

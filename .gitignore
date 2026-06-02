@@ -1,7 +1,24 @@
-.venv/
-__pycache__/
-*.pyc
-instance/
+# Environment variables
 .env
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+instance/
+*.sqlite3
+*.db
+
+# OS generated files
+.DS_Store
+
+# Uploads
 app/static/uploads/*
 !app/static/uploads/.gitkeep

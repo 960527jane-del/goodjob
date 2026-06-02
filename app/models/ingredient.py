@@ -8,8 +8,8 @@ DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__)
 class IngredientModel:
     """處理食材庫 (ingredients) 的資料庫操作"""
 
-    @staticmethod
-    def get_connection():
+    @classmethod
+    def get_connection(cls):
         """
         取得資料庫連線。
         確保 instance 目錄存在，並設定 row_factory 讓查詢結果能以 dict 方式存取。
@@ -18,10 +18,28 @@ class IngredientModel:
             os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
             conn = sqlite3.connect(DB_PATH)
             conn.row_factory = sqlite3.Row
+            cls._ensure_table_exists(conn)
             return conn
         except Exception as e:
             logging.error(f"資料庫連線失敗: {e}")
             raise
+
+    @classmethod
+    def _ensure_table_exists(cls, conn):
+        """確保 ingredients 資料表存在。"""
+        create_table_sql = '''
+            CREATE TABLE IF NOT EXISTS ingredients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                quantity REAL NOT NULL,
+                unit TEXT NOT NULL,
+                expiry_date TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        '''
+        cursor = conn.cursor()
+        cursor.execute(create_table_sql)
+        conn.commit()
 
     @classmethod
     def create(cls, name, quantity, unit, expiry_date=None):

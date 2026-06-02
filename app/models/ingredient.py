@@ -6,8 +6,8 @@ from config import DATABASE
 class IngredientModel:
     """處理食材庫 (ingredients) 的資料庫操作"""
 
-    @staticmethod
-    def get_connection():
+    @classmethod
+    def get_connection(cls):
         """
         取得資料庫連線。
         確保資料庫路徑所在目錄存在，並設定 row_factory 讓查詢結果能以 dict 方式存取。
@@ -16,15 +16,16 @@ class IngredientModel:
             os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
             conn = sqlite3.connect(DATABASE)
             conn.row_factory = sqlite3.Row
+            cls._ensure_table_exists(conn)
             return conn
         except Exception as e:
             logging.error(f"資料庫連線失敗: {e}")
             raise
 
     @classmethod
-    def ensure_table_exists(cls):
-        """確認 ingredients 資料表存在。"""
-        query = '''
+    def _ensure_table_exists(cls, conn):
+        """確保 ingredients 資料表存在。"""
+        create_table_sql = '''
             CREATE TABLE IF NOT EXISTS ingredients (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -32,11 +33,11 @@ class IngredientModel:
                 unit TEXT NOT NULL,
                 expiry_date TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+            );
         '''
-        with cls.get_connection() as conn:
-            conn.execute(query)
-            conn.commit()
+        cursor = conn.cursor()
+        cursor.execute(create_table_sql)
+        conn.commit()
 
     @classmethod
     def create(cls, name, quantity, unit, expiry_date=None):
@@ -49,7 +50,6 @@ class IngredientModel:
         :param expiry_date: 有效期限，格式 YYYY-MM-DD (str, optional)
         :return: 新增的記錄 ID，失敗則回傳 None
         """
-        cls.ensure_table_exists()
         query = '''
             INSERT INTO ingredients (name, quantity, unit, expiry_date)
             VALUES (?, ?, ?, ?)
@@ -71,7 +71,6 @@ class IngredientModel:
         
         :return: 食材記錄的 list (dict 格式)
         """
-        cls.ensure_table_exists()
         query = 'SELECT * FROM ingredients ORDER BY expiry_date ASC, id DESC'
         try:
             with cls.get_connection() as conn:
@@ -90,7 +89,6 @@ class IngredientModel:
         :param ingredient_id: 食材 ID (int)
         :return: 單筆記錄 (dict 格式)，找不到或失敗則回傳 None
         """
-        cls.ensure_table_exists()
         query = 'SELECT * FROM ingredients WHERE id = ?'
         try:
             with cls.get_connection() as conn:
@@ -114,7 +112,6 @@ class IngredientModel:
         :param expiry_date: 有效期限，格式 YYYY-MM-DD (str, optional)
         :return: 成功與否 (bool)
         """
-        cls.ensure_table_exists()
         query = '''
             UPDATE ingredients
             SET name = ?, quantity = ?, unit = ?, expiry_date = ?
@@ -138,7 +135,6 @@ class IngredientModel:
         :param ingredient_id: 食材 ID (int)
         :return: 成功與否 (bool)
         """
-        cls.ensure_table_exists()
         query = 'DELETE FROM ingredients WHERE id = ?'
         try:
             with cls.get_connection() as conn:

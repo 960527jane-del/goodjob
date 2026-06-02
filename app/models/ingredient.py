@@ -2,8 +2,8 @@ import sqlite3
 import os
 import logging
 
-# 設定資料庫檔案路徑 (在 instance 資料夾下)
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'instance', 'database.db')
+# 設定資料庫檔案路徑，與 main 同樣使用專案根目錄下的 database.db
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'database.db')
 
 class IngredientModel:
     """處理食材庫 (ingredients) 的資料庫操作"""

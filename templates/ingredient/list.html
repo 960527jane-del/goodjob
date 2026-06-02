@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}我的材料庫 - 隨食隨地{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="section-title">我的材料庫</h2>
+    <a href="{{ url_for('ingredient.new_ingredient') }}" class="btn btn-primary btn-gradient rounded-pill px-4">＋ 新增食材</a>
+</div>
+
+{% if ingredients %}
+    <div class="row g-4">
+        {% for item in ingredients %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card glass-card h-100 ingredient-card">
+                <div class="card-body">
+                    <h4 class="card-title fw-bold text-primary-light">{{ item.name }}</h4>
+                    <p class="card-text fs-4 mb-1">{{ item.quantity }} <span class="fs-6 text-muted">{{ item.unit }}</span></p>
+                    <p class="card-text text-muted small">
+                        有效期限：{{ item.expiry_date if item.expiry_date else '未設定' }}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex justify-content-end gap-2 pb-3 pe-3">
+                    <a href="{{ url_for('ingredient.edit_ingredient', id=item.id) }}" class="btn btn-sm btn-outline-light rounded-pill px-3">編輯</a>
+                    <form action="{{ url_for('ingredient.delete_ingredient', id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('確定要刪除 {{ item.name }} 嗎？');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">刪除</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5 glass-card mt-4">
+        <h4 class="text-light opacity-75 mb-3">目前還沒有任何食材</h4>
+        <p class="text-muted mb-4">點擊右上角新增食材，開始建立您的材料庫！</p>
+        <a href="{{ url_for('ingredient.new_ingredient') }}" class="btn btn-primary btn-gradient rounded-pill px-4">開始新增</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}智慧食譜推薦 - 隨食隨地{% endblock %}
+{% block content %}
+<div class="text-center mb-5 mt-3">
+    <h2 class="section-title text-gradient">智慧食譜推薦</h2>
+    <p class="text-light-muted mt-2">根據您的材料庫，我們為您精選了以下美味料理</p>
+</div>
+
+{% if recipes %}
+    <div class="row g-4">
+        {% for recipe in recipes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card glass-card h-100 recipe-card overflow-hidden">
+                <img src="{{ recipe.image }}" class="card-img-top recipe-img" alt="{{ recipe.title }}">
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-bold text-light mb-4">{{ recipe.title }}</h5>
+                    <div class="mb-4 d-flex gap-2 flex-wrap">
+                        <span class="badge glass-badge text-success">現有 {{ recipe.usedIngredientCount }} 項食材</span>
+                        {% if recipe.missedIngredientCount > 0 %}
+                            <span class="badge glass-badge text-warning">尚缺 {{ recipe.missedIngredientCount }} 項配料</span>
+                        {% else %}
+                            <span class="badge glass-badge text-info">配料齊全！</span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-auto pt-2">
+                        <a href="{{ url_for('recipe.recipe_detail', id=recipe.id) }}" class="btn btn-primary btn-gradient w-100 rounded-pill">查看詳細教學</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5 glass-card mt-4">
+        <h4 class="text-light opacity-75 mb-3">查無推薦食譜</h4>
+        <p class="text-muted mb-4">可能是因為您的材料庫還沒有食材，或是找不到適合的組合。</p>
+        <a href="{{ url_for('ingredient.new_ingredient') }}" class="btn btn-primary btn-gradient rounded-pill px-4">去新增食材</a>
+    </div>
+{% endif %}
+{% endblock %}

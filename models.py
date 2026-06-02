@@ -104,3 +104,54 @@ class UserAchievement(db.Model):
     achievement_id = db.Column(db.Integer, db.ForeignKey('achievement.id'), nullable=False)
     unlocked_at = db.Column(db.DateTime, default=datetime.utcnow)
     achievement = db.relationship('Achievement')
+
+
+class Ingredient(db.Model):
+    """庫存食材"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    quantity = db.Column(db.Float, default=0.0)
+    unit = db.Column(db.String(50), default='')
+    expiry_date = db.Column(db.String(10), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @staticmethod
+    def create(name, quantity, unit, expiry_date):
+        ingredient = Ingredient(
+            name=name,
+            quantity=quantity,
+            unit=unit,
+            expiry_date=expiry_date or None
+        )
+        db.session.add(ingredient)
+        db.session.commit()
+        return ingredient.id
+
+    @staticmethod
+    def get_all():
+        return Ingredient.query.order_by(Ingredient.created_at.desc()).all()
+
+    @staticmethod
+    def get_by_id(ingredient_id):
+        return Ingredient.query.get(ingredient_id)
+
+    @staticmethod
+    def update(ingredient_id, name, quantity, unit, expiry_date):
+        ingredient = Ingredient.query.get(ingredient_id)
+        if not ingredient:
+            return False
+        ingredient.name = name
+        ingredient.quantity = quantity
+        ingredient.unit = unit
+        ingredient.expiry_date = expiry_date or None
+        db.session.commit()
+        return True
+
+    @staticmethod
+    def delete(ingredient_id):
+        ingredient = Ingredient.query.get(ingredient_id)
+        if not ingredient:
+            return False
+        db.session.delete(ingredient)
+        db.session.commit()
+        return True

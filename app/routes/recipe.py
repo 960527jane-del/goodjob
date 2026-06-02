@@ -37,6 +37,14 @@ def get_mock_recipe_detail(recipe_id):
         "instructions": "1. 番茄洗淨切塊。<br>2. 雞蛋打散備用。<br>3. 熱鍋下油，先將雞蛋炒熟後撈起。<br>4. 原鍋再加少許油，下番茄拌炒至軟爛出汁。<br>5. 將炒好的雞蛋倒回鍋中，加入鹽調味，翻炒均勻即可起鍋。"
     }
 
+@recipe_bp.route('/recommend')
+def recommend():
+    """
+    [GET] 顯示食譜推薦說明頁面
+    """
+    return render_template('recipes/recommend.html')
+
+
 @recipe_bp.route('/')
 def list_recipes():
     """

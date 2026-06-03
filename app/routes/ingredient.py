@@ -1,23 +1,34 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app.models.ingredient import Ingredient
-
-ingredient_bp = Blueprint('ingredient', __name__)
+from flask import render_template, request, redirect, url_for, flash
+from . import ingredient_bp
+from app.models.ingredient import IngredientModel
 
 @ingredient_bp.route('/')
-def index():
+def list_ingredients():
     """
-    我的材料庫 (首頁)
-    取得所有食材，並渲染食材列表頁面。
-    對應模板：ingredients/index.html
+    [GET] 顯示所有材料庫內的食材
+    對應模板: ingredient/list.html
+    呼叫 Model: IngredientModel.get_all()
     """
-    ingredients = Ingredient.get_all()
-    return render_template('ingredients/index.html', ingredients=ingredients)
+    ingredients = IngredientModel.get_all()
+    return render_template('ingredient/list.html', ingredients=ingredients)
 
-@ingredient_bp.route('/ingredient/add', methods=['POST'])
-def add():
+# Register index as an alias endpoint pointing to list_ingredients
+ingredient_bp.add_url_rule('/', endpoint='index', view_func=list_ingredients)
+
+@ingredient_bp.route('/new')
+def new_ingredient():
     """
-    新增食材
-    接收表單資料，建立新紀錄後，重導向回首頁。
+    [GET] 顯示新增食材的表單頁面
+    對應模板: ingredient/new.html
+    """
+    return render_template('ingredient/new.html')
+
+@ingredient_bp.route('/', methods=['POST'])
+def create_ingredient():
+    """
+    [POST] 接收表單資料，建立新食材並存入資料庫
+    成功後重導向至 /ingredients
+    呼叫 Model: IngredientModel.create(...)
     """
     name = request.form.get('name')
     quantity = request.form.get('quantity')
@@ -25,78 +36,80 @@ def add():
     expiry_date = request.form.get('expiry_date')
 
     # 基本輸入驗證
-    if not name or not quantity:
-        flash('食材名稱與數量為必填欄位！', 'error')
-        return redirect(url_for('ingredient.index'))
+    if not name or not quantity or not unit:
+        flash('「食材名稱」、「數量」與「單位」為必填欄位！', 'error')
+        return redirect(url_for('ingredient.new_ingredient'))
 
     try:
         quantity = float(quantity)
     except ValueError:
-        flash('數量必須是數字！', 'error')
-        return redirect(url_for('ingredient.index'))
+        flash('「數量」必須為數字！', 'error')
+        return redirect(url_for('ingredient.new_ingredient'))
 
-    result_id = Ingredient.create(name, quantity, unit, expiry_date)
-    if result_id:
-        flash('食材新增成功！', 'success')
+    # 存入資料庫
+    ingredient_id = IngredientModel.create(name, quantity, unit, expiry_date)
+    if ingredient_id:
+        flash('成功新增食材！', 'success')
     else:
-        flash('食材新增失敗，請稍後再試。', 'error')
+        flash('新增食材失敗，請稍後再試。', 'error')
         
-    return redirect(url_for('ingredient.index'))
+    return redirect(url_for('ingredient.list_ingredients'))
 
-@ingredient_bp.route('/ingredient/edit/<int:id>')
-def edit(id):
+@ingredient_bp.route('/<int:id>/edit')
+def edit_ingredient(id):
     """
-    編輯食材頁面
-    取得單一食材資料，渲染編輯表單。
-    對應模板：ingredients/edit.html
+    [GET] 顯示編輯特定食材的表單頁面
+    對應模板: ingredient/edit.html
+    呼叫 Model: IngredientModel.get_by_id(id)
     """
-    ingredient = Ingredient.get_by_id(id)
+    ingredient = IngredientModel.get_by_id(id)
     if not ingredient:
         flash('找不到該食材！', 'error')
-        return redirect(url_for('ingredient.index'))
+        return redirect(url_for('ingredient.list_ingredients'))
         
-    return render_template('ingredients/edit.html', ingredient=ingredient)
+    return render_template('ingredient/edit.html', ingredient=ingredient)
 
-@ingredient_bp.route('/ingredient/update/<int:id>', methods=['POST'])
-def update(id):
+@ingredient_bp.route('/<int:id>/update', methods=['POST'])
+def update_ingredient(id):
     """
-    更新食材
-    接收編輯表單的資料，更新資料庫後，重導向回首頁。
+    [POST] 接收表單資料，更新特定食材資訊
+    成功後重導向至 /ingredients
+    呼叫 Model: IngredientModel.update(...)
     """
     name = request.form.get('name')
     quantity = request.form.get('quantity')
     unit = request.form.get('unit')
     expiry_date = request.form.get('expiry_date')
 
-    # 基本輸入驗證
-    if not name or not quantity:
-        flash('食材名稱與數量為必填欄位！', 'error')
-        return redirect(url_for('ingredient.edit', id=id))
+    if not name or not quantity or not unit:
+        flash('「食材名稱」、「數量」與「單位」為必填欄位！', 'error')
+        return redirect(url_for('ingredient.edit_ingredient', id=id))
 
     try:
         quantity = float(quantity)
     except ValueError:
-        flash('數量必須是數字！', 'error')
-        return redirect(url_for('ingredient.edit', id=id))
+        flash('「數量」必須為數字！', 'error')
+        return redirect(url_for('ingredient.edit_ingredient', id=id))
 
-    success = Ingredient.update(id, name, quantity, unit, expiry_date)
+    success = IngredientModel.update(id, name, quantity, unit, expiry_date)
     if success:
         flash('食材更新成功！', 'success')
     else:
-        flash('食材更新失敗，請稍後再試。', 'error')
+        flash('更新食材失敗，請稍後再試。', 'error')
+        
+    return redirect(url_for('ingredient.list_ingredients'))
 
-    return redirect(url_for('ingredient.index'))
-
-@ingredient_bp.route('/ingredient/delete/<int:id>', methods=['POST'])
-def delete(id):
+@ingredient_bp.route('/<int:id>/delete', methods=['POST'])
+def delete_ingredient(id):
     """
-    刪除食材
-    刪除指定 ID 的食材，完成後重導向回首頁。
+    [POST] 刪除特定食材
+    成功後重導向至 /ingredients
+    呼叫 Model: IngredientModel.delete(id)
     """
-    success = Ingredient.delete(id)
+    success = IngredientModel.delete(id)
     if success:
         flash('食材已刪除！', 'success')
     else:
-        flash('刪除失敗，請稍後再試。', 'error')
+        flash('刪除食材失敗，請稍後再試。', 'error')
         
-    return redirect(url_for('ingredient.index'))
+    return redirect(url_for('ingredient.list_ingredients'))

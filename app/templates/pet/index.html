@@ -65,12 +65,29 @@
                              aria-valuenow="{{ exp_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 </div>
+
+                <!-- 庫存與狀態欄 (F-04 整合) -->
+                <div class="row g-3 mb-4 mt-3">
+                    <div class="col-6">
+                        <div class="glass-card p-3 rounded-4 h-100 text-center" style="background: rgba(255,255,255,0.02); border-color: rgba(255, 255, 255, 0.05); padding: 1rem;">
+                            <p class="text-muted mb-1 small">飼料庫存</p>
+                            <p class="fs-4 fw-bold mb-0 text-white" id="feed-count">🥩 {{ inventory.count if inventory else 0 }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-card p-3 rounded-4 h-100 text-center" style="background: rgba(255,255,255,0.02); border-color: rgba(255, 255, 255, 0.05); padding: 1rem;">
+                            <p class="text-muted mb-1 small">健康狀態</p>
+                            <p class="fs-4 fw-bold mb-0 text-success">💖 良好</p>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- 互動按鈕 -->
-                <div class="pet-actions mt-5">
-                    <button id="feed-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold">
+                <div class="pet-actions mt-4">
+                    <button id="feed-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold" {% if not inventory or inventory.count < 1 %}disabled{% endif %}>
                         <i class="fa-solid fa-cookie-bite"></i> 手動餵食
                     </button>
+                    <div class="mt-2 text-muted small">餵食可令寵物獲得經驗並提升等級，解鎖更多進化！</div>
                 </div>
             </div>
             
@@ -92,6 +109,7 @@
         const progressBar = document.getElementById('pet-progress');
         const levelUpBadge = document.getElementById('level-up-badge');
         const petAvatarEmoji = document.getElementById('pet-avatar-emoji');
+        const feedCountSpan = document.getElementById('feed-count');
         
         feedBtn.addEventListener('click', function() {
             feedBtn.disabled = true;
@@ -114,6 +132,11 @@
                     expRemainingSpan.textContent = pet.exp_remaining;
                     expNeededSpan.textContent = pet.exp_to_next_level;
                     
+                    // 更新庫存數量 (F-04)
+                    if (feedCountSpan && data.remaining_feed !== undefined) {
+                        feedCountSpan.textContent = '🥩 ' + data.remaining_feed;
+                    }
+                    
                     // 點擊微震動效果
                     petAvatarEmoji.style.transform = 'scale(1.2)';
                     setTimeout(() => {
@@ -121,7 +144,7 @@
                     }, 200);
 
                     // 若有升級，則顯示特效並更新等級
-                    if (data.pet.is_level_up) {
+                    if (pet.is_level_up) {
                         levelSpan.textContent = pet.level;
                         
                         // 顯示升級徽章並執行簡單的 CSS 動畫
@@ -139,23 +162,31 @@
                     }
 
                     // 檢查是否觸發了進化 (evolution)
-                    if (data.pet.evolution && data.pet.evolution.evolved) {
+                    if (pet.evolution && pet.evolution.evolved) {
                         // 延遲一點點展現進化彈窗，體驗更佳
                         setTimeout(() => {
-                            showEvolutionModal(data.pet.evolution);
+                            showEvolutionModal(pet.evolution);
                         }, 800);
                     }
+                    
+                    // 檢查剩餘飼料是否還足夠下次餵食
+                    if (data.remaining_feed !== undefined && data.remaining_feed < 1) {
+                        feedBtn.disabled = true;
+                    } else {
+                        feedBtn.disabled = false;
+                    }
                 } else {
-                    alert('發生錯誤: ' + data.message);
+                    alert('發生錯誤: ' + (data.message || data.error));
+                    feedBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
                 alert("伺服器連線失敗");
+                feedBtn.disabled = false;
             })
             .finally(() => {
-                // 恢復按鈕狀態
-                feedBtn.disabled = false;
+                // 恢復按鈕文字
                 feedBtn.innerHTML = '<i class="fa-solid fa-cookie-bite"></i> 手動餵食';
             });
         });

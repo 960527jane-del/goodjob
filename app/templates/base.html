@@ -165,12 +165,12 @@
                 <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('ingredient.index') }}"><i class="fa-solid fa-carrot"></i> 我的材料庫</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('recipe.recommend') }}"><i class="fa-solid fa-wand-magic-sparkles"></i> 找靈感</a>
+                        <a class="nav-link" href="{{ url_for('recipe.list_recipes') }}"><i class="fa-solid fa-wand-magic-sparkles"></i> 找靈感</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('pet.pet_index') }}"><i class="fa-solid fa-paw"></i> 虛擬寵物</a>
@@ -178,6 +178,31 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('collection.collection_index') }}"><i class="fa-solid fa-book-open"></i> 寵物圖鑑</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('cooking.report_page') }}"><i class="fa-solid fa-fire-burner"></i> 烹飪回報</a>
+                    </li>
+                    
+                    <!-- 登入與使用者選單 -->
+                    {% if current_user and current_user.is_authenticated %}
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="nav-link dropdown-toggle btn btn-outline-light rounded-pill px-3 py-1 mt-2 mt-lg-0 text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                👤 {{ current_user.display_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item text-dark" href="{{ url_for('profile') }}">📈 我的成就</a></li>
+                                <li><a class="dropdown-item text-dark" href="{{ url_for('preferences') }}">⚙️ 偏好設定</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">🚪 登出</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-lg-3">
+                            <a class="btn btn-outline-light rounded-pill px-3 py-1 mt-2 mt-lg-0" href="{{ url_for('login') }}">登入</a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-primary rounded-pill px-3 py-1 mt-2 mt-lg-0 text-white" href="{{ url_for('register') }}">註冊</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

@@ -1,5 +1,5 @@
 -- ============================================================
--- 隨食隨地 — 統一資料庫 Schema (F-01, F-03, F-06)
+-- 隨食隨地 — 統一資料庫 Schema (F-01, F-03, F-04, F-06)
 -- ============================================================
 
 -- 1. 食材庫存表 (F-01)
@@ -7,17 +7,20 @@ CREATE TABLE IF NOT EXISTS ingredients (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
     quantity    REAL NOT NULL,
-    unit        TEXT,
-    expiry_date TEXT,
-    created_at  TEXT NOT NULL
+    unit        TEXT NOT NULL,
+    expiry_date TEXT, -- 儲存格式為 YYYY-MM-DD
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. 使用者基礎資料表 (F-03/F-06)
+-- 2. 使用者基礎資料表 (F-03/F-06/User Authentication)
 CREATE TABLE IF NOT EXISTS users (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    username   TEXT NOT NULL UNIQUE,
-    email      TEXT NOT NULL UNIQUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    display_name  TEXT,
+    cooking_count INTEGER DEFAULT 0,
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. 寵物種族定義表 (F-06)
@@ -73,13 +76,32 @@ CREATE TABLE IF NOT EXISTS user_collection (
     UNIQUE(user_id, pet_stage_id)
 );
 
+-- 7. 飼料庫存表 (F-04)
+CREATE TABLE IF NOT EXISTS feed_inventories (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL,
+    count      INTEGER DEFAULT 0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 8. 烹飪紀錄表 (F-04)
+CREATE TABLE IF NOT EXISTS cooking_records (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL,
+    image_path VARCHAR(255),
+    status     VARCHAR(50) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- ============================================================
 -- 種子資料：預設使用者與 3 種寵物 × 4 進化階段 = 12 筆圖鑑項目
 -- ============================================================
 
--- 建立預設開發用使用者 (ID = 1)
-INSERT OR IGNORE INTO users (id, username, email)
-VALUES (1, 'default_user', 'user@example.com');
+-- 建立預設開發用使用者 (ID = 1, 預設密碼為 1234)
+INSERT OR IGNORE INTO users (id, username, email, password_hash, display_name, cooking_count)
+VALUES (1, 'default_user', 'user@example.com', 'scrypt:32768:8:1$K3h8j6c3$ef36a5bfa4a6e87d7bca87b003a8d9a2ffb3846e4544d6db875ad2b419b48cde', '預設使用者', 0);
 
 -- 種族 1：小食怪（料理系）
 INSERT OR IGNORE INTO pet_species (id, name, element, emoji, description, color_primary, color_secondary)
@@ -124,3 +146,7 @@ VALUES (1, 1, '小食怪', 1, 0, 1);
 -- 預設解鎖第一階段圖鑑
 INSERT OR IGNORE INTO user_collection (user_id, pet_stage_id)
 VALUES (1, 1);
+
+-- 預設飼料庫存初始化 (給予 5 個，以便初始餵食測試)
+INSERT OR IGNORE INTO feed_inventories (id, user_id, count)
+VALUES (1, 1, 5);

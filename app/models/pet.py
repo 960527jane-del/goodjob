@@ -248,7 +248,7 @@ class Pet:
                 
             if not fields:
                 return
-                
+            
             params.append(pet_id)
             cursor.execute(f'''
                 UPDATE user_pets 
@@ -300,4 +300,5 @@ class Pet:
         updated = Pet.get_by_id(pet_id)
         if updated:
             updated['is_level_up'] = res.get('leveled_up', False)
+            updated['evolution'] = res.get('evolution')
         return updated

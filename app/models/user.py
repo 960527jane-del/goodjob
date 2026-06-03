@@ -15,6 +15,7 @@ class User(db.Model):
     pets = db.relationship('Pet', backref='owner', lazy=True, cascade="all, delete-orphan")
     feed_inventory = db.relationship('FeedInventory', backref='owner', uselist=False, cascade="all, delete-orphan")
     cooking_records = db.relationship('CookingRecord', backref='cook', lazy=True, cascade="all, delete-orphan")
+    ingredients = db.relationship('Ingredient', backref='owner', lazy=True, cascade="all, delete-orphan")
 
     @classmethod
     def create(cls, username, email):

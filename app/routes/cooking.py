@@ -27,9 +27,10 @@ def submit_report():
     # 假設 MVP 開發階段，固定 user_id = 1
     user_id = 1
     
-    # 取得圖片或狀態
+    # 取得圖片、狀態與食譜ID
     file = request.files.get('image')
     is_completed = request.form.get('completed')
+    recipe_id = request.form.get('recipe_id')
     
     if not file and not is_completed:
         flash("請上傳圖片或勾選完成狀態！", "danger")
@@ -52,7 +53,7 @@ def submit_report():
             return redirect(url_for('cooking.report_page'))
             
     # 新增烹飪紀錄
-    record = CookingRecord.create(user_id=user_id, image_path=image_path, status='completed')
+    record = CookingRecord.create(user_id=user_id, recipe_id=recipe_id, image_path=image_path, status='completed')
     if not record:
         flash("紀錄儲存失敗，請稍後再試。", "danger")
         return redirect(url_for('cooking.report_page'))

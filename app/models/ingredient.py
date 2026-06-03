@@ -1,131 +1,69 @@
-import sqlite3
-import os
+from app.models import db
+from datetime import datetime
 import logging
 
-# 設定資料庫檔案路徑 (在 instance 資料夾下)
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'instance', 'database.db')
-
-class IngredientModel:
-    """處理食材庫 (ingredients) 的資料庫操作"""
-
-    @staticmethod
-    def get_connection():
-        """
-        取得資料庫連線。
-        確保 instance 目錄存在，並設定 row_factory 讓查詢結果能以 dict 方式存取。
-        """
-        try:
-            os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-            conn = sqlite3.connect(DB_PATH)
-            conn.row_factory = sqlite3.Row
-            return conn
-        except Exception as e:
-            logging.error(f"資料庫連線失敗: {e}")
-            raise
+class Ingredient(db.Model):
+    """F-01: 我的材料庫 (使用者擁有的食材)"""
+    __tablename__ = 'ingredients'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    quantity = db.Column(db.Float, default=1.0)
+    unit = db.Column(db.String(20), nullable=True)
+    expiry_date = db.Column(db.Date, nullable=True)  # F-03: 過期提醒
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @classmethod
-    def create(cls, name, quantity, unit, expiry_date=None):
-        """
-        新增一筆食材記錄。
-        
-        :param name: 食材名稱 (str)
-        :param quantity: 數量 (float)
-        :param unit: 單位 (str)
-        :param expiry_date: 有效期限，格式 YYYY-MM-DD (str, optional)
-        :return: 新增的記錄 ID，失敗則回傳 None
-        """
-        query = '''
-            INSERT INTO ingredients (name, quantity, unit, expiry_date)
-            VALUES (?, ?, ?, ?)
-        '''
+    def create(cls, user_id, name, quantity=1.0, unit=None, expiry_date=None):
+        """新增一筆食材記錄"""
         try:
-            with cls.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (name, quantity, unit, expiry_date))
-                conn.commit()
-                return cursor.lastrowid
+            ingredient = cls(user_id=user_id, name=name, quantity=quantity, unit=unit, expiry_date=expiry_date)
+            db.session.add(ingredient)
+            db.session.commit()
+            return ingredient
         except Exception as e:
-            logging.error(f"新增食材失敗: {e}")
+            db.session.rollback()
+            logging.error(f"Error creating ingredient: {e}")
             return None
 
     @classmethod
-    def get_all(cls):
-        """
-        取得所有食材記錄，依照有效期限排序 (快過期的在前面)。
-        
-        :return: 食材記錄的 list (dict 格式)
-        """
-        query = 'SELECT * FROM ingredients ORDER BY expiry_date ASC, id DESC'
+    def get_by_user_id(cls, user_id):
+        """取得指定使用者的食材記錄，依過期日排序"""
         try:
-            with cls.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(query)
-                return [dict(row) for row in cursor.fetchall()]
+            return cls.query.filter_by(user_id=user_id).order_by(cls.expiry_date.asc()).all()
         except Exception as e:
-            logging.error(f"取得所有食材失敗: {e}")
+            logging.error(f"Error getting ingredients for user {user_id}: {e}")
             return []
 
     @classmethod
     def get_by_id(cls, ingredient_id):
-        """
-        根據 ID 取得單筆食材記錄。
-        
-        :param ingredient_id: 食材 ID (int)
-        :return: 單筆記錄 (dict 格式)，找不到或失敗則回傳 None
-        """
-        query = 'SELECT * FROM ingredients WHERE id = ?'
+        """根據 ID 取得單筆食材記錄"""
         try:
-            with cls.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (ingredient_id,))
-                row = cursor.fetchone()
-                return dict(row) if row else None
+            return cls.query.get(ingredient_id)
         except Exception as e:
-            logging.error(f"取得單筆食材失敗: {e}")
+            logging.error(f"Error getting ingredient by id: {e}")
             return None
 
-    @classmethod
-    def update(cls, ingredient_id, name, quantity, unit, expiry_date=None):
-        """
-        更新特定食材記錄。
-        
-        :param ingredient_id: 食材 ID (int)
-        :param name: 食材名稱 (str)
-        :param quantity: 數量 (float)
-        :param unit: 單位 (str)
-        :param expiry_date: 有效期限，格式 YYYY-MM-DD (str, optional)
-        :return: 成功與否 (bool)
-        """
-        query = '''
-            UPDATE ingredients
-            SET name = ?, quantity = ?, unit = ?, expiry_date = ?
-            WHERE id = ?
-        '''
+    def update(self, **kwargs):
+        """更新特定食材記錄"""
         try:
-            with cls.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (name, quantity, unit, expiry_date, ingredient_id))
-                conn.commit()
-                return cursor.rowcount > 0
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+            db.session.commit()
+            return True
         except Exception as e:
-            logging.error(f"更新食材失敗: {e}")
+            db.session.rollback()
+            logging.error(f"Error updating ingredient: {e}")
             return False
 
-    @classmethod
-    def delete(cls, ingredient_id):
-        """
-        刪除特定食材記錄。
-        
-        :param ingredient_id: 食材 ID (int)
-        :return: 成功與否 (bool)
-        """
-        query = 'DELETE FROM ingredients WHERE id = ?'
+    def delete(self):
+        """刪除特定食材記錄"""
         try:
-            with cls.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (ingredient_id,))
-                conn.commit()
-                return cursor.rowcount > 0
+            db.session.delete(self)
+            db.session.commit()
+            return True
         except Exception as e:
-            logging.error(f"刪除食材失敗: {e}")
+            db.session.rollback()
+            logging.error(f"Error deleting ingredient: {e}")
             return False

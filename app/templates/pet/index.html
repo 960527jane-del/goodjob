@@ -1,41 +1,148 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow border-0 rounded-4 overflow-hidden">
-            <div class="card-header text-center bg-white py-4 border-0">
-                <h2 class="fw-bold mb-0" style="color: #333;">🐶 {{ pet.name }}</h2>
+<style>
+    .pet-container {
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        border-radius: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        position: relative;
+        overflow: hidden;
+    }
+    .pet-avatar {
+        font-size: 120px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        display: inline-block;
+        filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+    }
+    .pet-avatar:hover {
+        transform: scale(1.1) translateY(-10px);
+    }
+    .progress-glass {
+        height: 28px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.05);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .progress-bar-custom {
+        background: linear-gradient(90deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%);
+        box-shadow: 0 2px 10px rgba(255, 154, 158, 0.4);
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        border: 1px solid rgba(255,255,255,0.8);
+    }
+    .btn-feed {
+        background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+        border: none;
+        color: white;
+        font-weight: 800;
+        font-size: 1.2rem;
+        padding: 15px 40px;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+    }
+    .btn-feed:hover:not(:disabled) {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
+        color: white;
+    }
+    .btn-feed:disabled {
+        background: #e9ecef;
+        color: #adb5bd;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+    .floating-text {
+        position: absolute;
+        color: #FF6B6B;
+        font-weight: bold;
+        font-size: 1.5rem;
+        pointer-events: none;
+        animation: floatUp 1s ease-out forwards;
+        z-index: 100;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    @keyframes floatUp {
+        0% { opacity: 1; transform: translateY(0) scale(1); }
+        100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+    }
+    .bounce-anim {
+        animation: bounce 0.5s ease;
+    }
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-20px) scale(1.1); }
+    }
+    .level-up-effect {
+        animation: glow 1s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+        from { box-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700; }
+        to { box-shadow: 0 0 20px #FF8C00, 0 0 40px #FF8C00; }
+    }
+</style>
+
+<div class="row justify-content-center py-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="pet-container p-5 text-center">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0" style="color: #495057; letter-spacing: 1px;">{{ pet.name }}</h3>
+                <span class="badge rounded-pill bg-white text-dark shadow-sm px-3 py-2 fs-6 border">
+                    Lv. <span id="pet-level" class="text-danger fw-bold fs-5">{{ pet.level }}</span>
+                </span>
             </div>
-            <div class="card-body p-5 text-center bg-light">
-                <!-- 寵物動畫區域 -->
-                <div class="mb-4" id="pet-avatar" style="font-size: 100px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+
+            <!-- 寵物動畫區域 -->
+            <div class="position-relative my-5">
+                <div id="pet-avatar" class="pet-avatar">
                     🐕
                 </div>
-                
-                <div class="row justify-content-center mb-4">
-                    <div class="col-md-8">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="fw-bold text-muted">Lv. <span id="pet-level" class="text-dark">{{ pet.level }}</span></span>
-                            <span class="text-muted"><span id="pet-exp" class="text-dark fw-bold">{{ pet.exp }}</span> / 100 EXP</span>
-                        </div>
-                        <div class="progress shadow-sm" style="height: 24px; border-radius: 12px; background-color: #e9ecef;">
-                            <div id="exp-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ pet.exp }}%; background-color: #ffc107;" aria-valuenow="{{ pet.exp }}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
+                <!-- 浮動文字容器 -->
+                <div id="floating-container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+            </div>
+            
+            <div class="mb-5 px-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold text-secondary">經驗值 (EXP)</span>
+                    <span class="fw-bold" style="color: #FF6B6B;">
+                        <span id="pet-exp" class="fs-5">{{ pet.exp }}</span> <span class="text-muted">/ 100</span>
+                    </span>
                 </div>
-                
-                <div class="d-flex justify-content-center align-items-center gap-4 mt-5">
-                    <div class="bg-white p-3 rounded-4 shadow-sm border" style="min-width: 120px;">
-                        <span class="d-block text-muted small mb-1 fw-bold">擁有飼料</span>
-                        <span class="fs-4 fw-bold" id="feed-count">🥩 {{ inventory.count }}</span>
-                    </div>
-                    
-                    <button id="feed-btn" class="btn btn-lg rounded-pill px-5 shadow fw-bold text-white" style="background-color: #ff6b6b; border: none; transition: transform 0.2s;" {% if inventory.count < 1 %}disabled{% endif %}>
-                        餵食寵物
-                    </button>
+                <div class="progress progress-glass">
+                    <div id="exp-bar" class="progress-bar progress-bar-custom progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ pet.exp }}%;" aria-valuenow="{{ pet.exp }}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
             </div>
+            
+            <div class="d-flex justify-content-center align-items-center gap-4 mt-4">
+                <div class="stat-card">
+                    <span class="d-block text-muted small fw-bold mb-1 text-uppercase tracking-wider">背包飼料</span>
+                    <span class="fs-3 fw-bold" style="color: #2b2d42;" id="feed-count">🥩 {{ inventory.count }}</span>
+                </div>
+                
+                <button id="feed-btn" class="btn btn-feed" {% if inventory.count < 1 %}disabled{% endif %}>
+                    <i class="fas fa-bone me-2"></i>餵食
+                </button>
+            </div>
+            
+            {% if inventory.count < 1 %}
+            <div class="mt-4">
+                <a href="{{ url_for('recipe.list_recipes') }}" class="text-decoration-none fw-bold" style="color: #FF6B6B;">
+                    飼料不足？去看看推薦食譜賺飼料吧！ <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            {% endif %}
+            
         </div>
     </div>
 </div>
@@ -46,6 +153,7 @@
     document.getElementById('feed-btn').addEventListener('click', function() {
         const btn = this;
         btn.disabled = true;
+        const originalContent = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 餵食中...';
         
         fetch('{{ url_for("pet.feed_pet") }}', {
@@ -57,42 +165,66 @@
         .then(response => response.json())
         .then(data => {
             if(data.success) {
-                // 更新畫面資料
+                // 更新數字
                 document.getElementById('pet-exp').innerText = data.new_exp;
                 document.getElementById('pet-level').innerText = data.new_level;
                 document.getElementById('feed-count').innerText = '🥩 ' + data.remaining_feed;
                 document.getElementById('exp-bar').style.width = data.new_exp + '%';
                 
-                // 動畫效果
+                // 進食動畫與漂浮特效
                 const avatar = document.getElementById('pet-avatar');
-                avatar.style.transform = 'scale(1.3) translateY(-10px)';
-                setTimeout(() => {
-                    avatar.style.transform = 'scale(1) translateY(0)';
-                }, 400);
+                avatar.classList.remove('bounce-anim');
+                void avatar.offsetWidth; // trigger reflow
+                avatar.classList.add('bounce-anim');
                 
+                const floatingContainer = document.getElementById('floating-container');
+                const expText = document.createElement('div');
+                expText.className = 'floating-text';
+                expText.innerText = '+20 EXP';
+                // 隨機偏移一點位置增加動態感
+                const offsetX = (Math.random() - 0.5) * 60;
+                expText.style.transform = `translateX(${offsetX}px)`;
+                floatingContainer.appendChild(expText);
+                
+                setTimeout(() => {
+                    floatingContainer.removeChild(expText);
+                }, 1000);
+                
+                // 升級特效
                 if(data.level_up) {
                     setTimeout(() => {
-                        alert('🎉 恭喜！你的寵物升級了！目前等級：Lv.' + data.new_level);
-                    }, 500);
+                        const container = document.querySelector('.pet-container');
+                        container.classList.add('level-up-effect');
+                        
+                        // 簡單的五彩紙屑特效可以用 SweetAlert2 或 canvas 實作，這裡用 Alert 代替
+                        alert('🎉 恭喜！你的寵物升級到了 Lv.' + data.new_level + '！');
+                        
+                        setTimeout(() => {
+                            container.classList.remove('level-up-effect');
+                        }, 3000);
+                    }, 600);
                 }
                 
+                // 復原按鈕狀態
                 if(data.remaining_feed < 1) {
                     btn.disabled = true;
+                    // 若無飼料，重新載入畫面以顯示「去看看推薦食譜」的提示
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
                     btn.disabled = false;
                 }
-                btn.innerHTML = '餵食寵物';
+                btn.innerHTML = originalContent;
             } else {
                 alert(data.error);
                 btn.disabled = false;
-                btn.innerHTML = '餵食寵物';
+                btn.innerHTML = originalContent;
             }
         })
         .catch(err => {
             console.error(err);
             alert('發生錯誤，請稍後再試！');
             btn.disabled = false;
-            btn.innerHTML = '餵食寵物';
+            btn.innerHTML = originalContent;
         });
     });
 </script>

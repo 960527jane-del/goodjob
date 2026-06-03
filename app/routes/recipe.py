@@ -1,7 +1,7 @@
 from flask import render_template, current_app, flash
 import requests
 from . import recipe_bp
-from app.models.ingredient import IngredientModel
+from app.models.ingredient import Ingredient
 
 def get_mock_recipes():
     """提供測試用的食譜清單假資料"""
@@ -42,13 +42,14 @@ def list_recipes():
     """
     [GET] 讀取使用者庫存食材，向外部 API 請求並顯示推薦食譜清單
     """
-    ingredients = IngredientModel.get_all()
+    user_id = 1 # MVP assumed user
+    ingredients = Ingredient.get_by_user_id(user_id)
     if not ingredients:
         flash('您的材料庫目前是空的，無法為您推薦食譜。請先新增食材！', 'warning')
         return render_template('recipe/list.html', recipes=[])
 
     # 將現有食材串接為字串 (如: "番茄,雞蛋")
-    ingredient_names = [item['name'] for item in ingredients]
+    ingredient_names = [item.name for item in ingredients]
     ingredients_str = ','.join(ingredient_names)
 
     api_key = current_app.config.get('RECIPE_API_KEY')

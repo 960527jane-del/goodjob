@@ -1,15 +1,15 @@
 from flask import render_template, request, redirect, url_for, flash
 from . import ingredient_bp
-from app.models.ingredient import IngredientModel
+from app.models.ingredient import Ingredient
 
 @ingredient_bp.route('/')
 def list_ingredients():
     """
     [GET] 顯示所有材料庫內的食材
     對應模板: ingredient/list.html
-    呼叫 Model: IngredientModel.get_all()
     """
-    ingredients = IngredientModel.get_all()
+    user_id = 1 # MVP assumed user
+    ingredients = Ingredient.get_by_user_id(user_id)
     return render_template('ingredient/list.html', ingredients=ingredients)
 
 @ingredient_bp.route('/new')
@@ -25,8 +25,8 @@ def create_ingredient():
     """
     [POST] 接收表單資料，建立新食材並存入資料庫
     成功後重導向至 /ingredients
-    呼叫 Model: IngredientModel.create(...)
     """
+    user_id = 1
     name = request.form.get('name')
     quantity = request.form.get('quantity')
     unit = request.form.get('unit')
@@ -42,10 +42,19 @@ def create_ingredient():
     except ValueError:
         flash('「數量」必須為數字！', 'error')
         return redirect(url_for('ingredient.new_ingredient'))
+        
+    if expiry_date:
+        from datetime import datetime
+        try:
+            expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d').date()
+        except:
+            expiry_date = None
+    else:
+        expiry_date = None
 
     # 存入資料庫
-    ingredient_id = IngredientModel.create(name, quantity, unit, expiry_date)
-    if ingredient_id:
+    ingredient = Ingredient.create(user_id, name, quantity, unit, expiry_date)
+    if ingredient:
         flash('成功新增食材！', 'success')
     else:
         flash('新增食材失敗，請稍後再試。', 'error')
@@ -56,10 +65,8 @@ def create_ingredient():
 def edit_ingredient(id):
     """
     [GET] 顯示編輯特定食材的表單頁面
-    對應模板: ingredient/edit.html
-    呼叫 Model: IngredientModel.get_by_id(id)
     """
-    ingredient = IngredientModel.get_by_id(id)
+    ingredient = Ingredient.get_by_id(id)
     if not ingredient:
         flash('找不到該食材！', 'error')
         return redirect(url_for('ingredient.list_ingredients'))
@@ -70,9 +77,12 @@ def edit_ingredient(id):
 def update_ingredient(id):
     """
     [POST] 接收表單資料，更新特定食材資訊
-    成功後重導向至 /ingredients
-    呼叫 Model: IngredientModel.update(...)
     """
+    ingredient = Ingredient.get_by_id(id)
+    if not ingredient:
+        flash('找不到該食材！', 'error')
+        return redirect(url_for('ingredient.list_ingredients'))
+
     name = request.form.get('name')
     quantity = request.form.get('quantity')
     unit = request.form.get('unit')
@@ -88,7 +98,16 @@ def update_ingredient(id):
         flash('「數量」必須為數字！', 'error')
         return redirect(url_for('ingredient.edit_ingredient', id=id))
 
-    success = IngredientModel.update(id, name, quantity, unit, expiry_date)
+    if expiry_date:
+        from datetime import datetime
+        try:
+            expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d').date()
+        except:
+            expiry_date = None
+    else:
+        expiry_date = None
+
+    success = ingredient.update(name=name, quantity=quantity, unit=unit, expiry_date=expiry_date)
     if success:
         flash('食材更新成功！', 'success')
     else:
@@ -100,13 +119,15 @@ def update_ingredient(id):
 def delete_ingredient(id):
     """
     [POST] 刪除特定食材
-    成功後重導向至 /ingredients
-    呼叫 Model: IngredientModel.delete(id)
     """
-    success = IngredientModel.delete(id)
-    if success:
-        flash('食材已刪除！', 'success')
+    ingredient = Ingredient.get_by_id(id)
+    if ingredient:
+        success = ingredient.delete()
+        if success:
+            flash('食材已刪除！', 'success')
+        else:
+            flash('刪除食材失敗，請稍後再試。', 'error')
     else:
-        flash('刪除食材失敗，請稍後再試。', 'error')
+        flash('找不到該食材！', 'error')
         
     return redirect(url_for('ingredient.list_ingredients'))

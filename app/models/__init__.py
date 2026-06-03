@@ -7,6 +7,8 @@ from app.models.user import User
 from app.models.pet import Pet
 from app.models.feed_inventory import FeedInventory
 from app.models.cooking_record import CookingRecord
+from app.models.ingredient import Ingredient
+from app.models.recipe import Recipe
 
 __all__ = [
     'db',
@@ -14,5 +16,6 @@ __all__ = [
     'Pet',
     'FeedInventory',
     'CookingRecord',
-    'IngredientModel'
+    'Ingredient',
+    'Recipe'
 ]

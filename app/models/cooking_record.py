@@ -8,15 +8,16 @@ class CookingRecord(db.Model):
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id', ondelete='SET NULL'), nullable=True)
     image_path = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(50), nullable=False, default='completed')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @classmethod
-    def create(cls, user_id, image_path=None, status='completed'):
+    def create(cls, user_id, recipe_id=None, image_path=None, status='completed'):
         """新增一筆烹飪記錄"""
         try:
-            record = cls(user_id=user_id, image_path=image_path, status=status)
+            record = cls(user_id=user_id, recipe_id=recipe_id, image_path=image_path, status=status)
             db.session.add(record)
             db.session.commit()
             return record

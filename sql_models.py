@@ -8,6 +8,8 @@ db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
     """使用者帳號"""
+    __tablename__ = 'users'
+    
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
@@ -34,7 +36,7 @@ class User(UserMixin, db.Model):
 class UserPreference(db.Model):
     """使用者飲食偏好"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     diet_type = db.Column(db.String(20), default='omnivore')       # omnivore, vegetarian, vegan, pescatarian
     spicy_ok = db.Column(db.Boolean, default=True)                 # 是否接受辣
     cooking_level = db.Column(db.String(20), default='beginner')   # beginner, intermediate, advanced
@@ -45,7 +47,7 @@ class UserPreference(db.Model):
 class UserAllergen(db.Model):
     """使用者過敏原"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     allergen_name = db.Column(db.String(50), nullable=False)  # 花生, 牛奶, 蛋, 麩質, 海鮮, 堅果, 大豆
 
     __table_args__ = (
@@ -81,7 +83,7 @@ class Recipe(db.Model):
 class Collection(db.Model):
     """食譜收藏"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
     saved_at = db.Column(db.DateTime, default=datetime.utcnow)
     recipe = db.relationship('Recipe')
@@ -100,7 +102,7 @@ class Achievement(db.Model):
 class UserAchievement(db.Model):
     """使用者成就解鎖記錄"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     achievement_id = db.Column(db.Integer, db.ForeignKey('achievement.id'), nullable=False)
     unlocked_at = db.Column(db.DateTime, default=datetime.utcnow)
     achievement = db.relationship('Achievement')

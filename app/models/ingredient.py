@@ -145,3 +145,7 @@ class IngredientModel:
         except Exception as e:
             logging.error(f"刪除食材失敗: {e}")
             return False
+
+# Alias for compatibility with F-01 routes and templates
+Ingredient = IngredientModel
+

@@ -1,30 +1,10 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sql_models import db, User, UserPreference, UserAllergen, Recipe, Collection, Achievement, UserAchievement
-from app.routes import ingredient_bp, recipe_bp, cooking_bp, pet_bp
-from routes.collection_routes import collection_bp
-from config import DATABASE
-from models.db import close_db
+from app import create_app
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'super-secret-key-cute-app'
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['DATABASE'] = DATABASE
-app.teardown_appcontext(close_db)
-
-db.init_app(app)
-
-with app.app_context():
-    db.create_all()
-
-app.register_blueprint(ingredient_bp)
-app.register_blueprint(recipe_bp)
-app.register_blueprint(cooking_bp)
-app.register_blueprint(pet_bp)
-app.register_blueprint(collection_bp)
+app = create_app()
 
 # ─── Flask-Login 初始化 ───
 login_manager = LoginManager()
@@ -32,7 +12,6 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = '請先登入才能使用此功能 🔒'
 login_manager.login_message_category = 'warning'
-
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -84,12 +63,12 @@ def init_db():
             ]
             db.session.bulk_save_objects(achievements)
 
-        # 如果沒有食譜，建立範例食譜（含 F-07 標籤與過敏原）
+        # 如果沒有食譜，建立範例食譜
         if not Recipe.query.first():
             recipes = [
                 Recipe(
                     title="番茄炒蛋",
-                    description="經典家常菜，酸甜下飯。只需番茄和雞蛋即可完成。",
+                    description="經典家常菜，酸甜下飯。只需番茄 and 雞蛋即可完成。",
                     image_url="https://images.unsplash.com/photo-1596797038530-2c107229654b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
                     tags="quick,egg,rice",
                     cooking_time=15,
@@ -186,7 +165,7 @@ def filter_recipes_by_preference(recipes, user):
     """根據使用者偏好過濾食譜"""
     pref = user.preference
     if not pref:
-        return recipes  # 沒有設定偏好，回傳全部
+        return recipes
 
     user_allergens = [a.allergen_name for a in user.allergens]
     filtered = []
@@ -195,7 +174,7 @@ def filter_recipes_by_preference(recipes, user):
         recipe_tags = recipe.get_tags_list()
         recipe_allergens = recipe.get_allergens_list()
 
-        # 1. 過敏原過濾：排除含使用者過敏原的食譜
+        # 1. 過敏原過濾
         if user_allergens:
             has_allergen = False
             for allergen in user_allergens:
@@ -207,15 +186,12 @@ def filter_recipes_by_preference(recipes, user):
 
         # 2. 飲食類型過濾
         if pref.diet_type == 'vegan':
-            # 全素：只保留含 vegan 標籤的食譜
             if 'vegan' not in recipe_tags:
                 continue
         elif pref.diet_type == 'vegetarian':
-            # 素食(蛋奶素)：排除含 meat 或 seafood 標籤的食譜
             if 'meat' in recipe_tags or 'seafood' in recipe_tags:
                 continue
         elif pref.diet_type == 'pescatarian':
-            # 海鮮素：排除含 meat 標籤（但保留 seafood）
             if 'meat' in recipe_tags:
                 continue
 
@@ -369,7 +345,6 @@ def preferences():
         db.session.commit()
 
     if request.method == 'POST':
-        # 更新飲食類型
         pref.diet_type = request.form.get('diet_type', 'omnivore')
         pref.spicy_ok = request.form.get('spicy_ok') == 'on'
         pref.cooking_level = request.form.get('cooking_level', 'beginner')
@@ -380,9 +355,7 @@ def preferences():
             pref.max_cooking_time = 60
 
         # 更新過敏原
-        # 先刪除舊的
         UserAllergen.query.filter_by(user_id=user.id).delete()
-        # 加入新選的
         selected_allergens = request.form.getlist('allergens')
         for allergen_name in selected_allergens:
             if allergen_name in ALLERGEN_OPTIONS:
@@ -403,27 +376,13 @@ def preferences():
 
 
 # ════════════════════════════════════════
-#  主頁面路由
+#  主頁面與收藏、烹飪路由
 # ════════════════════════════════════════
 
 @app.route('/')
 def index():
-    recipes = Recipe.query.all()
-    collections = []
-
-    # 如果使用者已登入，套用偏好過濾
-    if current_user.is_authenticated:
-        recipes = filter_recipes_by_preference(recipes, current_user)
-        collections = [c.recipe_id for c in current_user.collections]
-
-    all_recipes_count = Recipe.query.count()
-    filtered_count = all_recipes_count - len(recipes)
-
-    return render_template('index.html',
-                           recipes=recipes,
-                           collections=collections,
-                           tag_display=TAG_DISPLAY,
-                           filtered_count=filtered_count)
+    # 首頁顯示材料庫列表
+    return redirect(url_for('ingredient.index'))
 
 
 @app.route('/profile')
@@ -459,7 +418,7 @@ def add_collection(recipe_id):
             flash(f'解鎖成就：{ach.name} {ach.icon}', 'success')
 
         flash('已加入收藏！', 'success')
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('recipe.list_recipes'))
 
 
 @app.route('/collection/remove/<int:recipe_id>', methods=['POST'])
@@ -471,7 +430,7 @@ def remove_collection(recipe_id):
         db.session.delete(existing)
         db.session.commit()
         flash('已取消收藏。', 'info')
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('recipe.list_recipes'))
 
 
 @app.route('/cook/<int:recipe_id>', methods=['POST'])
@@ -488,7 +447,7 @@ def cook_recipe(recipe_id):
         flash(f'解鎖成就：{ach.name} {ach.icon}', 'success')
 
     flash(f'完成料理「{recipe.title}」！累計烹飪次數：{user.cooking_count} 次', 'success')
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('recipe.list_recipes'))
 
 
 if __name__ == '__main__':

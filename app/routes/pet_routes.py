@@ -42,8 +42,9 @@ def feed_pet():
     處理手動餵食請求
     
     - 取得預設使用者的寵物 (MVP hardcode user_id=1)
+    - 檢查飽食度是否已達上限 (100)
     - 檢查並扣除 1 個飼料庫存 (F-04 整合)
-    - 呼叫 Pet.add_exp 增加經驗值並處理升級與進化
+    - 呼叫 Pet.feed 增加飽食度 (+20) 與經驗值 (+20)，並處理升級與進化
     - 回傳 JSON 格式的最新寵物狀態與剩餘飼料數
     """
     # MVP 階段預設使用 user_id = 1
@@ -54,6 +55,11 @@ def feed_pet():
         if not pet:
             return jsonify({"success": False, "message": "找不到寵物，請先進入寵物頁面建立"}), 404
             
+        # 檢查飽食度是否已達上限 (100)
+        current_hunger = pet.get('hunger', 50)
+        if current_hunger >= 100:
+            return jsonify({"success": False, "message": "寵物已經吃得很飽囉！不需要再餵食了 💖"}), 400
+
         # 檢查與扣除飼料庫存 (F-04 整合)
         inventory = FeedInventory.get_by_user_id(user_id)
         if not inventory:
@@ -65,13 +71,44 @@ def feed_pet():
         if not inventory.consume_feed(1):
             return jsonify({"success": False, "message": "扣除飼料失敗，請重試"}), 500
             
-        # 增加 20 經驗值並觸發升級/進化邏輯
-        updated_pet = Pet.add_exp(pet['id'], 20)
+        # 進行餵食 (飽食度 +20, 經驗值/成長值 +20)
+        updated_pet = Pet.feed(pet['id'], exp_amount=20, hunger_increase=20)
+        
+        # 檢查成就
+        from sql_models import User
+        user = User.query.get(user_id)
+        unlocked_achievements = []
+        if user:
+            newly_unlocked = user.check_achievements()
+            unlocked_achievements = [{
+                "name": ach.name,
+                "icon": ach.icon,
+                "description": ach.description
+            } for ach in newly_unlocked]
         
         return jsonify({
             "success": True,
             "pet": updated_pet,
-            "remaining_feed": inventory.count
+            "remaining_feed": inventory.count,
+            "unlocked_achievements": unlocked_achievements
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@pet_bp.route('/status', methods=['GET'])
+def pet_status():
+    """
+    API 端點：取得寵物最新狀態 (含飽食度與成長值)
+    """
+    user_id = 1
+    try:
+        pet = Pet.get_by_user_id(user_id)
+        if not pet:
+            return jsonify({"success": False, "message": "找不到寵物"}), 404
+            
+        return jsonify({
+            "success": True,
+            "pet": pet
         })
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

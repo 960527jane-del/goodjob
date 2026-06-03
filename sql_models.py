@@ -19,7 +19,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 關聯
-    collections = db.relationship('Collection', backref='user', lazy=True, cascade="all, delete-orphan")
+    pet = db.relationship('PetModel', backref='user', uselist=False, cascade="all, delete-orphan")
     achievements = db.relationship('UserAchievement', backref='user', lazy=True, cascade="all, delete-orphan")
     preference = db.relationship('UserPreference', backref='user', uselist=False, cascade="all, delete-orphan")
     allergens = db.relationship('UserAllergen', backref='user', lazy=True, cascade="all, delete-orphan")
@@ -31,6 +31,37 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """驗證密碼"""
         return check_password_hash(self.password_hash, password)
+
+    def check_achievements(self):
+        """檢查並解鎖成就"""
+        result = db.session.execute(
+            db.text("SELECT COUNT(*) FROM user_collection WHERE user_id = :user_id"),
+            {"user_id": self.id}
+        ).fetchone()
+        collections_count = result[0] if result else 0
+        cooking_count = self.cooking_count
+
+        all_achievements = Achievement.query.all()
+        unlocked_achievement_ids = [ua.achievement_id for ua in self.achievements]
+
+        newly_unlocked = []
+
+        for ach in all_achievements:
+            if ach.id not in unlocked_achievement_ids:
+                if ach.condition_type == 'collect' and collections_count >= ach.condition_value:
+                    ua = UserAchievement(user_id=self.id, achievement_id=ach.id)
+                    db.session.add(ua)
+                    newly_unlocked.append(ach)
+                elif ach.condition_type == 'cook' and cooking_count >= ach.condition_value:
+                    ua = UserAchievement(user_id=self.id, achievement_id=ach.id)
+                    db.session.add(ua)
+                    newly_unlocked.append(ach)
+
+        if newly_unlocked:
+            db.session.commit()
+
+        return newly_unlocked
+
 
 
 class UserPreference(db.Model):
@@ -55,38 +86,20 @@ class UserAllergen(db.Model):
     )
 
 
-class Recipe(db.Model):
-    """食譜"""
+class PetModel(db.Model):
+    """使用者寵物狀態 (SQLAlchemy mapping for user_pets)"""
+    __tablename__ = 'user_pets'
+
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    image_url = db.Column(db.String(500), nullable=True)
-    # F-07 新增欄位：用於偏好過濾
-    tags = db.Column(db.String(200), default='')           # 逗號分隔標籤，如 'vegetarian,spicy,quick'
-    cooking_time = db.Column(db.Integer, default=30)       # 烹飪時間(分鐘)
-    difficulty = db.Column(db.String(20), default='beginner')  # beginner, intermediate, advanced
-    allergens = db.Column(db.String(200), default='')      # 逗號分隔過敏原，如 'egg,milk'
-
-    def get_tags_list(self):
-        """取得標籤列表"""
-        if not self.tags:
-            return []
-        return [t.strip() for t in self.tags.split(',') if t.strip()]
-
-    def get_allergens_list(self):
-        """取得過敏原列表"""
-        if not self.allergens:
-            return []
-        return [a.strip() for a in self.allergens.split(',') if a.strip()]
-
-
-class Collection(db.Model):
-    """食譜收藏"""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
-    saved_at = db.Column(db.DateTime, default=datetime.utcnow)
-    recipe = db.relationship('Recipe')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    species_id = db.Column(db.Integer, db.ForeignKey('pet_species.id'), nullable=False)
+    pet_name = db.Column(db.String(100))
+    current_level = db.Column(db.Integer, default=1)
+    current_exp = db.Column(db.Integer, default=0)
+    current_stage_id = db.Column(db.Integer, db.ForeignKey('pet_stages.id'), nullable=False)
+    hunger = db.Column(db.Integer, default=50)  # 飽食度 (0-100)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class Achievement(db.Model):

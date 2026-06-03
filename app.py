@@ -1,7 +1,7 @@
 import os
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from sql_models import db, User, UserPreference, UserAllergen, Recipe, Collection, Achievement, UserAchievement
+from sql_models import db, User, UserPreference, UserAllergen, Achievement, UserAchievement
 from app import create_app
 
 app = create_app()
@@ -32,22 +32,6 @@ COOKING_LEVEL_OPTIONS = {
     'advanced': '廚房老手'
 }
 
-# ─── 食譜標籤中英文對照 ───
-TAG_DISPLAY = {
-    'vegetarian': '🥬 素食',
-    'vegan': '🌱 全素',
-    'spicy': '🌶️ 辣',
-    'quick': '⚡ 快速',
-    'seafood': '🐟 海鮮',
-    'meat': '🥩 肉類',
-    'soup': '🍲 湯品',
-    'noodle': '🍜 麵食',
-    'rice': '🍚 飯類',
-    'egg': '🥚 含蛋',
-    'milk': '🥛 含奶',
-}
-
-
 def init_db():
     with app.app_context():
         db.create_all()
@@ -55,185 +39,15 @@ def init_db():
         # 如果沒有成就，建立預設成就
         if not Achievement.query.first():
             achievements = [
-                Achievement(name="踏出新手村的廚師", description="首次將食譜加入收藏", icon="🎓", condition_type="collect", condition_value=1),
-                Achievement(name="食譜收集狂", description="收藏 5 篇食譜", icon="📚", condition_type="collect", condition_value=5),
-                Achievement(name="開火啦！", description="完成第 1 道料理", icon="🔥", condition_type="cook", condition_value=1),
-                Achievement(name="連續開伙小天才", description="完成 5 道料理", icon="🍳", condition_type="cook", condition_value=5),
-                Achievement(name="清冰箱大師", description="完成 10 道料理", icon="❄️", condition_type="cook", condition_value=10)
+                Achievement(name="初次踏入廚房", description="解鎖 1 個進化圖鑑", icon="🎓", condition_type="collect", condition_value=1),
+                Achievement(name="圖鑑收集狂", description="解鎖 5 個進化圖鑑", icon="📚", condition_type="collect", condition_value=5),
+                Achievement(name="開火啦！", description="完成第 1 次烹飪", icon="🔥", condition_type="cook", condition_value=1),
+                Achievement(name="連續開伙小天才", description="完成 5 次烹飪", icon="🍳", condition_type="cook", condition_value=5),
+                Achievement(name="清冰箱大師", description="完成 10 次烹飪", icon="❄️", condition_type="cook", condition_value=10)
             ]
             db.session.bulk_save_objects(achievements)
-
-        # 如果沒有食譜，建立範例食譜
-        if not Recipe.query.first():
-            recipes = [
-                Recipe(
-                    title="番茄炒蛋",
-                    description="經典家常菜，酸甜下飯。只需番茄 and 雞蛋即可完成。",
-                    image_url="https://images.unsplash.com/photo-1596797038530-2c107229654b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="quick,egg,rice",
-                    cooking_time=15,
-                    difficulty="beginner",
-                    allergens="蛋"
-                ),
-                Recipe(
-                    title="蒜香義大利麵",
-                    description="只要大蒜、橄欖油和義大利麵就能完成的經典風味。",
-                    image_url="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="quick,noodle,vegan",
-                    cooking_time=20,
-                    difficulty="beginner",
-                    allergens="麩質"
-                ),
-                Recipe(
-                    title="日式咖哩飯",
-                    description="濃郁的咖哩塊搭配紅蘿蔔與馬鈴薯，溫暖你的胃。",
-                    image_url="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="rice,meat",
-                    cooking_time=45,
-                    difficulty="intermediate",
-                    allergens="牛奶,麩質"
-                ),
-                Recipe(
-                    title="香煎雞腿排",
-                    description="外酥內嫩的雞腿排，簡單調味就很好吃。",
-                    image_url="https://images.unsplash.com/photo-1600891964092-4316c288032e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="meat,quick",
-                    cooking_time=25,
-                    difficulty="beginner",
-                    allergens=""
-                ),
-                Recipe(
-                    title="麻婆豆腐",
-                    description="麻辣鮮香的四川經典，白飯殺手！",
-                    image_url="https://images.unsplash.com/photo-1582452919408-aca4c8de5428?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="spicy,meat,rice",
-                    cooking_time=30,
-                    difficulty="intermediate",
-                    allergens="大豆"
-                ),
-                Recipe(
-                    title="清炒高麗菜",
-                    description="清脆爽口的高麗菜，營養滿分，超簡單素食料理。",
-                    image_url="https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="vegetarian,vegan,quick",
-                    cooking_time=10,
-                    difficulty="beginner",
-                    allergens=""
-                ),
-                Recipe(
-                    title="馬鈴薯燉肉",
-                    description="日式家庭料理的經典，甜甜鹹鹹超暖心。",
-                    image_url="https://images.unsplash.com/photo-1548943487-a2e4e43b4850?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="meat,soup",
-                    cooking_time=50,
-                    difficulty="intermediate",
-                    allergens="大豆"
-                ),
-                Recipe(
-                    title="泰式酸辣蝦湯",
-                    description="酸酸辣辣的經典泰式湯品，開胃又暖身。",
-                    image_url="https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="spicy,seafood,soup",
-                    cooking_time=35,
-                    difficulty="intermediate",
-                    allergens="海鮮"
-                ),
-                Recipe(
-                    title="素食蔬菜咖哩",
-                    description="用滿滿蔬菜熬成的咖哩，全素也能超美味。",
-                    image_url="https://images.unsplash.com/photo-1585937421612-70a008356fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="vegetarian,vegan,rice",
-                    cooking_time=40,
-                    difficulty="beginner",
-                    allergens=""
-                ),
-                Recipe(
-                    title="韓式辣炒年糕",
-                    description="Q彈年糕搭配甜辣醬，韓劇必備的人氣小吃。",
-                    image_url="https://images.unsplash.com/photo-1635363638580-c2809d049eee?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                    tags="spicy,vegetarian,quick",
-                    cooking_time=20,
-                    difficulty="beginner",
-                    allergens="麩質,大豆"
-                ),
-            ]
-            db.session.bulk_save_objects(recipes)
             db.session.commit()
 
-
-def filter_recipes_by_preference(recipes, user):
-    """根據使用者偏好過濾食譜"""
-    pref = user.preference
-    if not pref:
-        return recipes
-
-    user_allergens = [a.allergen_name for a in user.allergens]
-    filtered = []
-
-    for recipe in recipes:
-        recipe_tags = recipe.get_tags_list()
-        recipe_allergens = recipe.get_allergens_list()
-
-        # 1. 過敏原過濾
-        if user_allergens:
-            has_allergen = False
-            for allergen in user_allergens:
-                if allergen in recipe_allergens:
-                    has_allergen = True
-                    break
-            if has_allergen:
-                continue
-
-        # 2. 飲食類型過濾
-        if pref.diet_type == 'vegan':
-            if 'vegan' not in recipe_tags:
-                continue
-        elif pref.diet_type == 'vegetarian':
-            if 'meat' in recipe_tags or 'seafood' in recipe_tags:
-                continue
-        elif pref.diet_type == 'pescatarian':
-            if 'meat' in recipe_tags:
-                continue
-
-        # 3. 辣度過濾
-        if not pref.spicy_ok and 'spicy' in recipe_tags:
-            continue
-
-        # 4. 烹飪時間過濾
-        if pref.max_cooking_time and recipe.cooking_time:
-            if recipe.cooking_time > pref.max_cooking_time:
-                continue
-
-        filtered.append(recipe)
-
-    return filtered
-
-
-def check_achievements(user):
-    """檢查並解鎖成就"""
-    collections_count = len(user.collections)
-    cooking_count = user.cooking_count
-
-    all_achievements = Achievement.query.all()
-    unlocked_achievement_ids = [ua.achievement_id for ua in user.achievements]
-
-    newly_unlocked = []
-
-    for ach in all_achievements:
-        if ach.id not in unlocked_achievement_ids:
-            if ach.condition_type == 'collect' and collections_count >= ach.condition_value:
-                ua = UserAchievement(user_id=user.id, achievement_id=ach.id)
-                db.session.add(ua)
-                newly_unlocked.append(ach)
-            elif ach.condition_type == 'cook' and cooking_count >= ach.condition_value:
-                ua = UserAchievement(user_id=user.id, achievement_id=ach.id)
-                db.session.add(ua)
-                newly_unlocked.append(ach)
-
-    if newly_unlocked:
-        db.session.commit()
-
-    return newly_unlocked
 
 
 # ════════════════════════════════════════
@@ -379,11 +193,6 @@ def preferences():
 #  主頁面與收藏、烹飪路由
 # ════════════════════════════════════════
 
-@app.route('/')
-def index():
-    # 首頁顯示材料庫列表
-    return redirect(url_for('ingredient.index'))
-
 
 @app.route('/profile')
 @login_required
@@ -402,52 +211,6 @@ def profile():
 
     return render_template('profile.html', user=user, achievements_status=achievements_status)
 
-
-@app.route('/collection/add/<int:recipe_id>', methods=['POST'])
-@login_required
-def add_collection(recipe_id):
-    user = current_user
-    existing = Collection.query.filter_by(user_id=user.id, recipe_id=recipe_id).first()
-    if not existing:
-        new_col = Collection(user_id=user.id, recipe_id=recipe_id)
-        db.session.add(new_col)
-        db.session.commit()
-
-        newly_unlocked = check_achievements(user)
-        for ach in newly_unlocked:
-            flash(f'解鎖成就：{ach.name} {ach.icon}', 'success')
-
-        flash('已加入收藏！', 'success')
-    return redirect(request.referrer or url_for('recipe.list_recipes'))
-
-
-@app.route('/collection/remove/<int:recipe_id>', methods=['POST'])
-@login_required
-def remove_collection(recipe_id):
-    user = current_user
-    existing = Collection.query.filter_by(user_id=user.id, recipe_id=recipe_id).first()
-    if existing:
-        db.session.delete(existing)
-        db.session.commit()
-        flash('已取消收藏。', 'info')
-    return redirect(request.referrer or url_for('recipe.list_recipes'))
-
-
-@app.route('/cook/<int:recipe_id>', methods=['POST'])
-@login_required
-def cook_recipe(recipe_id):
-    user = current_user
-    recipe = Recipe.query.get_or_404(recipe_id)
-
-    user.cooking_count += 1
-    db.session.commit()
-
-    newly_unlocked = check_achievements(user)
-    for ach in newly_unlocked:
-        flash(f'解鎖成就：{ach.name} {ach.icon}', 'success')
-
-    flash(f'完成料理「{recipe.title}」！累計烹飪次數：{user.cooking_count} 次', 'success')
-    return redirect(request.referrer or url_for('recipe.list_recipes'))
 
 
 if __name__ == '__main__':

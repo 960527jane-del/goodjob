@@ -14,6 +14,7 @@ def map_pet_row(row):
     d['name'] = d.get('pet_name')
     d['level'] = d.get('current_level', 1)
     d['exp'] = d.get('current_exp', 0)
+    d['hunger'] = d.get('hunger', 50)
 
     # 計算經驗值升級進度
     from config import EXP_PER_LEVEL_MULTIPLIER
@@ -135,8 +136,8 @@ class Pet:
             
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO user_pets (user_id, species_id, pet_name, current_level, current_exp, current_stage_id)
-                VALUES (?, 1, ?, 1, 0, ?)
+                INSERT INTO user_pets (user_id, species_id, pet_name, current_level, current_exp, current_stage_id, hunger)
+                VALUES (?, 1, ?, 1, 0, ?, 50)
             ''', (user_id, name, stage_id))
             
             # 解鎖圖鑑
@@ -297,6 +298,47 @@ class Pet:
         res = service_add_exp(user_id, amount)
 
         # 3. 取出最新狀態並組裝回傳
+        updated = Pet.get_by_id(pet_id)
+        if updated:
+            updated['is_level_up'] = res.get('leveled_up', False)
+            updated['evolution'] = res.get('evolution')
+        return updated
+
+    @staticmethod
+    def feed(pet_id, exp_amount=20, hunger_increase=20):
+        """
+        餵食寵物：增加飽食度（飢餓度），增加經驗值（成長值），並處理進化判定。
+        """
+        # 1. 查詢當前狀態
+        conn = get_db_connection()
+        try:
+            row = conn.execute('SELECT user_id, hunger FROM user_pets WHERE id = ?', (pet_id,)).fetchone()
+            if not row:
+                raise ValueError("Pet not found")
+            user_id = row['user_id']
+            current_hunger = row['hunger'] if row['hunger'] is not None else 50
+        finally:
+            conn.close()
+
+        # 2. 計算新飽食度 (最高 100)
+        new_hunger = min(100, current_hunger + hunger_increase)
+
+        # 3. 呼叫服務層增加經驗值（成長值）
+        from app.services.evolution_service import add_exp as service_add_exp
+        res = service_add_exp(user_id, exp_amount)
+
+        # 4. 更新飽食度
+        conn = get_db_connection()
+        try:
+            conn.execute('UPDATE user_pets SET hunger = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', (new_hunger, pet_id))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+        # 5. 回傳最新狀態
         updated = Pet.get_by_id(pet_id)
         if updated:
             updated['is_level_up'] = res.get('leveled_up', False)

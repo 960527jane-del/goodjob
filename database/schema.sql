@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS user_pets (
     current_level    INTEGER DEFAULT 1,          -- 當前等級
     current_exp      INTEGER DEFAULT 0,          -- 當前經驗值
     current_stage_id INTEGER NOT NULL,           -- 當前進化階段 (FK)
+    hunger           INTEGER DEFAULT 50,         -- 飽食度/飢餓度 (0-100)
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

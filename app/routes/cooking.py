@@ -57,6 +57,16 @@ def submit_report():
         flash("紀錄儲存失敗，請稍後再試。", "danger")
         return redirect(url_for('cooking.report_page'))
         
+    # 更新使用者烹飪次數與檢查成就
+    from sql_models import db, User
+    user = User.query.get(user_id)
+    if user:
+        user.cooking_count += 1
+        db.session.commit()
+        newly_unlocked = user.check_achievements()
+        for ach in newly_unlocked:
+            flash(f'解鎖成就：{ach.name} {ach.icon}', 'success')
+        
     # 增加飼料
     inventory = FeedInventory.get_by_user_id(user_id)
     if not inventory:

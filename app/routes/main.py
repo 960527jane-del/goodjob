@@ -1,14 +1,10 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, redirect, url_for
 
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', methods=['GET'])
 def index():
     """
-    處理首頁請求
-    
-    輸入: 無
-    處理邏輯: 處理基本顯示，檢查狀態。
-    輸出: 渲染 templates/index.html
+    將首頁請求重定向至虛擬寵物主頁面
     """
-    return render_template('index.html')
+    return redirect(url_for('pet.pet_index'))

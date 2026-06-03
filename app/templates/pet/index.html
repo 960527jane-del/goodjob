@@ -50,19 +50,54 @@
 
                 <!-- 狀態資訊與進度條 -->
                 <div class="pet-status mb-4 text-start">
+                    <!-- 飽食度進度條 -->
                     <div class="d-flex justify-content-between align-items-end mb-2">
+<<<<<<< HEAD
                         <span class="fs-5 fw-bold text-white">
                             Lv. <span id="pet-level" style="color: {{ pet.color_primary if pet else '#EC4899' }};">{{
                                 pet.level if pet else 1 }}</span>
+=======
+                        <span class="fs-6 fw-bold text-white">
+                            🍗 飽食度
+                        </span>
+                        <small class="text-muted">
+                            <span id="pet-hunger">{{ pet.hunger if pet else 50 }}</span> / 100
+                        </small>
+                    </div>
+                    <div class="progress mb-3" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        {% set hunger_percent = pet.hunger if pet else 50 %}
+                        {% if hunger_percent >= 70 %}
+                            {% set bar_bg = 'linear-gradient(to right, #10B981, #059669)' %}
+                        {% elif hunger_percent >= 30 %}
+                            {% set bar_bg = 'linear-gradient(to right, #F59E0B, #D97706)' %}
+                        {% else %}
+                            {% set bar_bg = 'linear-gradient(to right, #EF4444, #DC2626)' %}
+                        {% endif %}
+                        <div id="pet-hunger-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: {{ hunger_percent }}%; 
+                                    background: {{ bar_bg }} !important; 
+                                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);" 
+                             aria-valuenow="{{ hunger_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <!-- 等級經驗進度條 -->
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-6 fw-bold text-white">
+                            Lv. <span id="pet-level" style="color: {{ pet.color_primary if pet else '#EC4899' }};">{{ pet.level if pet else 1 }}</span>
+>>>>>>> origin/main
                         </span>
                         <small class="text-muted">
                             <span id="pet-exp-remaining">{{ pet.exp_remaining if pet else 0 }}</span> /
                             <span id="pet-exp-needed">{{ pet.exp_to_next_level if pet else 50 }}</span> EXP
                         </small>
                     </div>
+<<<<<<< HEAD
 
                     <div class="progress"
                         style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+=======
+                    <div class="progress" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+>>>>>>> origin/main
                         {% set exp_percent = pet.exp_progress if pet else 0 %}
                         <div id="pet-progress" class="progress-bar progress-bar-striped progress-bar-animated"
                             role="progressbar" style="width: {{ exp_percent }}%; 
@@ -90,6 +125,7 @@
                         </div>
                     </div>
                 </div>
+<<<<<<< HEAD
 
                 <div class="d-flex justify-content-center align-items-center gap-4 mt-5">
                     <div class="bg-white p-3 rounded-4 shadow-sm border" style="min-width: 120px;">
@@ -101,9 +137,30 @@
                         style="background-color: #ff6b6b; border: none; transition: transform 0.2s;" {% if
                         inventory.count < 1 %}disabled{% endif %}>
                         餵食寵物
+=======
+                
+                <!-- 互動按鈕 -->
+                <div class="pet-actions mt-4">
+                    <button id="feed-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold" 
+                            title="{% if not inventory or inventory.count < 1 %}飼料不足！{% elif pet and pet.hunger >= 100 %}寵物已經很飽了！{% endif %}"
+                            {% if not inventory or inventory.count < 1 or (pet and pet.hunger >= 100) %}disabled{% endif %}>
+                        <i class="fa-solid fa-cookie-bite"></i> 手動餵食
+>>>>>>> origin/main
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 成就解鎖提示通知 -->
+<div id="achievement-toast" class="glass-card shadow-lg border-primary position-fixed bottom-0 end-0 m-4 p-3" 
+     style="display: none; z-index: 1050; max-width: 350px; background: rgba(15, 23, 42, 0.95); border: 2px solid #8B5CF6; transform: translateY(100px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" id="achievement-toast-icon">🏆</div>
+        <div>
+            <h5 class="fw-bold text-white mb-1" id="achievement-toast-title">解鎖新成就！</h5>
+            <p class="text-muted mb-0 small" id="achievement-toast-desc">成就描述內容</p>
         </div>
     </div>
 </div>
@@ -128,6 +185,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+<<<<<<< HEAD
                     // 更新畫面資料
                     document.getElementById('pet-exp').innerText = data.new_exp;
                     document.getElementById('pet-level').innerText = data.new_level;
@@ -137,6 +195,41 @@
                     // 動畫效果
                     const avatar = document.getElementById('pet-avatar');
                     avatar.style.transform = 'scale(1.3) translateY(-10px)';
+=======
+                    const pet = data.pet;
+                    
+                    // 更新進度條與文字
+                    progressBar.style.width = pet.exp_progress + '%';
+                    progressBar.setAttribute('aria-valuenow', pet.exp_progress);
+                    expRemainingSpan.textContent = pet.exp_remaining;
+                    expNeededSpan.textContent = pet.exp_to_next_level;
+                    
+                    // 更新飽食度與飽食進度條
+                    const hungerSpan = document.getElementById('pet-hunger');
+                    const hungerBar = document.getElementById('pet-hunger-progress');
+                    if (hungerSpan && hungerBar) {
+                        hungerSpan.textContent = pet.hunger;
+                        hungerBar.style.width = pet.hunger + '%';
+                        hungerBar.setAttribute('aria-valuenow', pet.hunger);
+                        
+                        // 動態更新飽食度顏色
+                        if (pet.hunger >= 70) {
+                            hungerBar.style.setProperty('background', 'linear-gradient(to right, #10B981, #059669)', 'important');
+                        } else if (pet.hunger >= 30) {
+                            hungerBar.style.setProperty('background', 'linear-gradient(to right, #F59E0B, #D97706)', 'important');
+                        } else {
+                            hungerBar.style.setProperty('background', 'linear-gradient(to right, #EF4444, #DC2626)', 'important');
+                        }
+                    }
+                    
+                    // 更新庫存數量 (F-04)
+                    if (feedCountSpan && data.remaining_feed !== undefined) {
+                        feedCountSpan.textContent = '🥩 ' + data.remaining_feed;
+                    }
+                    
+                    // 點擊微震動效果
+                    petAvatarEmoji.style.transform = 'scale(1.2)';
+>>>>>>> origin/main
                     setTimeout(() => {
                         avatar.style.transform = 'scale(1) translateY(0)';
                     }, 400);
@@ -147,11 +240,59 @@
                         }, 500);
                     }
 
+<<<<<<< HEAD
                     if (data.remaining_feed < 1) {
                         btn.disabled = true;
+=======
+                    // 檢查是否觸發了進化 (evolution)
+                    if (pet.evolution && pet.evolution.evolved) {
+                        // 延遲一點點展現進化彈窗，體驗更佳
+                        setTimeout(() => {
+                            showEvolutionModal(pet.evolution);
+                        }, 800);
+                    }
+                    
+                    // 顯示解鎖的成就
+                    if (data.unlocked_achievements && data.unlocked_achievements.length > 0) {
+                        data.unlocked_achievements.forEach((ach, index) => {
+                            setTimeout(() => {
+                                const toast = document.getElementById('achievement-toast');
+                                const toastIcon = document.getElementById('achievement-toast-icon');
+                                const toastTitle = document.getElementById('achievement-toast-title');
+                                const toastDesc = document.getElementById('achievement-toast-desc');
+                                
+                                toastIcon.textContent = ach.icon;
+                                toastTitle.textContent = '解鎖成就：' + ach.name;
+                                toastDesc.textContent = ach.description;
+                                
+                                toast.style.display = 'block';
+                                setTimeout(() => {
+                                    toast.style.transform = 'translateY(0)';
+                                }, 50);
+                                
+                                // 4 秒後自動消失
+                                setTimeout(() => {
+                                    toast.style.transform = 'translateY(100px)';
+                                    setTimeout(() => {
+                                        toast.style.display = 'none';
+                                    }, 500);
+                                }, 4000);
+                            }, index * 4500);
+                        });
+                    }
+                    
+                    // 檢查剩餘飼料與飽食度是否還足夠下次餵食
+                    if (pet.hunger >= 100) {
+                        feedBtn.disabled = true;
+                        feedBtn.title = "寵物已經很飽了！";
+                    } else if (data.remaining_feed !== undefined && data.remaining_feed < 1) {
+                        feedBtn.disabled = true;
+                        feedBtn.title = "飼料不足！";
+>>>>>>> origin/main
                     } else {
                         alert('發生錯誤: ' + (data.message || data.error));
                         feedBtn.disabled = false;
+                        feedBtn.title = "";
                     }
                     btn.innerHTML = '餵食寵物';
                 } else {

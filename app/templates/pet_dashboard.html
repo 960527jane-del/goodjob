@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}我的虛擬寵物 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6 text-center">
+        <!-- 採用 glass-card，並提供炫彩陰影 -->
+        <div class="glass-card shadow-lg border-0" 
+             style="border-color: rgba(255, 255, 255, 0.15) !important;
+                    box-shadow: 0 10px 40px rgba(139, 92, 246, 0.25) !important;">
+            
+            <div class="card-body p-4">
+                <!-- 寵物名字與種族徽章 -->
+                <h2 class="card-title mb-2 fw-bold text-white" id="pet-display-name">
+                    {{ pet.name }}
+                </h2>
+                <div class="mb-4">
+                    <span class="badge rounded-pill px-3 py-2 fs-6" 
+                          style="background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff;">
+                        👾 成長期 · 虛擬伴侶
+                    </span>
+                </div>
+                
+                <!-- 寵物圖片/虛擬視覺區塊 -->
+                <div class="pet-image mb-5 position-relative">
+                    <div id="pet-avatar-container" class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-lg" 
+                          style="width: 220px; height: 220px; 
+                                 border: 4px solid #8B5CF6;
+                                 background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.15)) !important;">
+                        
+                        <span id="pet-avatar-emoji" style="font-size: 6.5rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            🐶
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 狀態資訊與進度條 -->
+                <div class="pet-status mb-4 text-start">
+                    <!-- 飢餓度進度條 -->
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-6 fw-bold text-white">
+                            🍖 飢餓度 (越低越飽)
+                        </span>
+                        <small class="text-muted">
+                            <span id="pet-hunger">{{ pet.hunger }}</span> / 100
+                        </small>
+                    </div>
+                    <div class="progress mb-4" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        {% set hunger_percent = pet.hunger %}
+                        <div id="pet-hunger-progress" class="progress-bar progress-bar-striped progress-bar-animated animate-bar" role="progressbar" 
+                             style="width: {{ hunger_percent }}%; 
+                                    background: {% if hunger_percent <= 30 %}linear-gradient(to right, #10B981, #059669){% elif hunger_percent <= 70 %}linear-gradient(to right, #F59E0B, #D97706){% else %}linear-gradient(to right, #EF4444, #DC2626){% endif %} !important; 
+                                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);" 
+                             aria-valuenow="{{ hunger_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <!-- 成長值進度條 -->
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-6 fw-bold text-white">
+                            ⭐ 成長值
+                        </span>
+                        <small class="text-muted">
+                            <span id="pet-growth">{{ pet.growth }}</span> EXP
+                        </small>
+                    </div>
+                    <div class="progress" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        <div id="pet-growth-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: {{ pet.growth % 100 }}%; 
+                                    background: linear-gradient(to right, #8B5CF6, #EC4899) !important; 
+                                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);" 
+                             aria-valuenow="{{ pet.growth % 100 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- 互動按鈕 -->
+                <div class="pet-actions mt-5">
+                    <button id="feed-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold" 
+                            title="{% if pet.hunger <= 0 %}寵物已經很飽了！{% endif %}"
+                            {% if pet.hunger <= 0 %}disabled{% endif %}>
+                        <i class="fa-solid fa-cookie-bite"></i> 手動餵食
+                    </button>
+                    <div class="mt-2 text-muted small">每次餵食會減少 10 點飢餓度，並增加 10 點成長值！</div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- 提示訊息 -->
+<div id="toast-overlay" class="glass-card shadow-lg border-primary position-fixed bottom-0 end-0 m-4 p-3" 
+     style="display: none; z-index: 1050; max-width: 350px; background: rgba(15, 23, 42, 0.95); border: 2px solid #8B5CF6; transform: translateY(100px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="d-flex align-items-center">
+        <div class="fs-1 me-3">✨</div>
+        <div>
+            <h5 class="fw-bold text-white mb-1" id="toast-title">提示</h5>
+            <p class="text-muted mb-0 small" id="toast-message">訊息內容</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const feedBtn = document.getElementById('feed-btn');
+        const hungerSpan = document.getElementById('pet-hunger');
+        const hungerBar = document.getElementById('pet-hunger-progress');
+        const growthSpan = document.getElementById('pet-growth');
+        const growthBar = document.getElementById('pet-growth-progress');
+        const petAvatarEmoji = document.getElementById('pet-avatar-emoji');
+        const toast = document.getElementById('toast-overlay');
+        const toastTitle = document.getElementById('toast-title');
+        const toastMsg = document.getElementById('toast-message');
+
+        function showToast(title, message) {
+            toastTitle.textContent = title;
+            toastMsg.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(0)';
+            }, 50);
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 500);
+            }, 3000);
+        }
+        
+        feedBtn.addEventListener('click', function() {
+            feedBtn.disabled = true;
+            feedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 餵食中...';
+            
+            fetch("{{ url_for('feed') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新飢餓度
+                    hungerSpan.textContent = data.hunger;
+                    hungerBar.style.width = data.hunger + '%';
+                    hungerBar.setAttribute('aria-valuenow', data.hunger);
+                    
+                    // 動態更新飢餓度顏色
+                    if (data.hunger <= 30) {
+                        hungerBar.style.setProperty('background', 'linear-gradient(to right, #10B981, #059669)', 'important');
+                    } else if (data.hunger <= 70) {
+                        hungerBar.style.setProperty('background', 'linear-gradient(to right, #F59E0B, #D97706)', 'important');
+                    } else {
+                        hungerBar.style.setProperty('background', 'linear-gradient(to right, #EF4444, #DC2626)', 'important');
+                    }
+
+                    // 更新成長值
+                    growthSpan.textContent = data.growth;
+                    growthBar.style.width = (data.growth % 100) + '%';
+                    growthBar.setAttribute('aria-valuenow', data.growth % 100);
+
+                    // 點擊微震動效果
+                    petAvatarEmoji.style.transform = 'scale(1.2) rotate(10deg)';
+                    setTimeout(() => {
+                        petAvatarEmoji.style.transform = 'scale(1) rotate(0deg)';
+                    }, 200);
+
+                    showToast("餵食成功！", data.message);
+
+                    // 檢查是否吃飽了
+                    if (data.hunger <= 0) {
+                        feedBtn.disabled = true;
+                        feedBtn.title = "寵物已經很飽了！";
+                    } else {
+                        feedBtn.disabled = false;
+                        feedBtn.title = "";
+                    }
+                } else {
+                    showToast("餵食失敗", data.message || "發生錯誤");
+                    feedBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showToast("連線失敗", "伺服器連線失敗");
+                feedBtn.disabled = false;
+            })
+            .finally(() => {
+                feedBtn.innerHTML = '<i class="fa-solid fa-cookie-bite"></i> 手動餵食';
+            });
+        });
+    });
+</script>
+{% endblock %}

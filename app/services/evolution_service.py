@@ -1,9 +1,9 @@
 """
-進化服務 — 核心進化邏輯與經驗值計算
+進化服務 — 核心進化邏輯與經驗值計算 (F-06)
 """
-from models.db import get_db
-from models import pet as pet_model
-from models import collection as collection_model
+from app.database import get_db
+from app.models import pet as pet_model
+from app.models import collection as collection_model
 from config import EXP_PER_LEVEL_MULTIPLIER
 
 

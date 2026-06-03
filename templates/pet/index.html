@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}寵物圖鑑 - 隨「食」隨地{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="section-title">寵物圖鑑</h2>
+        <p class="text-muted">照顧你的 AI 寵物，讓牠成長並體驗更多互動。</p>
+    </div>
+    <a href="{{ url_for('ingredient.list_ingredients') }}" class="btn btn-outline-light rounded-pill px-4">回到材料庫</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 rounded-4 bg-white">
+            <div class="card-body text-center py-5">
+                <div class="mb-4" id="pet-avatar" style="font-size: 96px; transition: transform 0.3s ease;">
+                    🐶
+                </div>
+                <h3 class="fw-bold mb-3">{{ pet.name }}</h3>
+                <p class="text-muted mb-4">目前等級 <span class="text-dark fw-bold">Lv. {{ pet.level }}</span>，EXP <span class="text-dark fw-bold">{{ pet.exp }}</span> / 100</p>
+                <div class="progress mb-4" style="height: 22px; background-color: #e9ecef; border-radius: 14px;">
+                    <div id="exp-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: {{ pet.exp }}%; border-radius: 14px;" aria-valuenow="{{ pet.exp }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 text-start">
+                            <p class="text-muted small mb-1">飼料庫存</p>
+                            <p class="fw-bold fs-4 mb-0">🥩 {{ inventory.count }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 text-start">
+                            <p class="text-muted small mb-1">寵物狀態</p>
+                            <p class="fw-bold fs-4 mb-0">健康良好</p>
+                        </div>
+                    </div>
+                </div>
+                <button id="feed-btn" class="btn btn-primary rounded-pill px-5 py-2" {% if inventory.count < 1 %}disabled{% endif %}>餵食寵物</button>
+                <p class="text-muted small mt-3">餵食可提升經驗值，等級升級可解鎖更多成長效果。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('feed-btn');
+        if (!btn) return;
+
+        btn.addEventListener('click', function() {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 餵食中...';
+
+            fetch('{{ url_for("pet.feed_pet") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('pet-exp').innerText = data.new_exp;
+                    document.getElementById('pet-level').innerText = data.new_level;
+                    document.getElementById('exp-bar').style.width = data.new_exp + '%';
+                    btn.innerHTML = '餵食寵物';
+                    btn.disabled = data.remaining_feed < 1;
+                    if (data.level_up) {
+                        alert('🎉 恭喜！你的寵物升級了！目前等級：Lv.' + data.new_level);
+                    }
+                } else {
+                    alert(data.error);
+                    btn.disabled = false;
+                    btn.innerHTML = '餵食寵物';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('發生錯誤，請稍後再試。');
+                btn.disabled = false;
+                btn.innerHTML = '餵食寵物';
+            });
+        });
+    });
+</script>
+{% endblock %}

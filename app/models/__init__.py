@@ -1,6 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from sql_models import db
 
 # Import all models here to ensure they are registered with SQLAlchemy metadata
 from app.models.user import User

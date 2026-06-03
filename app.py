@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sql_models import db, User, UserPreference, UserAllergen, Recipe, Collection, Achievement, UserAchievement
-from app.routes import ingredient_bp, recipe_bp
+from app.routes import ingredient_bp, recipe_bp, cooking_bp, pet_bp
 from routes.collection_routes import collection_bp
 from config import DATABASE
 from models.db import close_db
@@ -16,8 +16,14 @@ app.config['DATABASE'] = DATABASE
 app.teardown_appcontext(close_db)
 
 db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
 app.register_blueprint(ingredient_bp)
 app.register_blueprint(recipe_bp)
+app.register_blueprint(cooking_bp)
+app.register_blueprint(pet_bp)
 app.register_blueprint(collection_bp)
 
 # ─── Flask-Login 初始化 ───

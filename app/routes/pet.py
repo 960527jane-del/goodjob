@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from app.models.pet import Pet
 from app.models.feed_inventory import FeedInventory
+from app.models.user import User
 
 pet_bp = Blueprint('pet', __name__, url_prefix='/pet')
 
@@ -11,7 +12,15 @@ def pet_page():
     """
     # 假設 MVP 開發階段，固定 user_id = 1
     user_id = 1
-    
+    user = User.get_by_id(user_id)
+    if not user:
+        user = User.create(username='demo_user', email='demo@example.com')
+        if not user:
+            users = User.get_all()
+            user = users[0] if users else None
+        if user:
+            user_id = user.id
+
     # 取得寵物與庫存
     pet = Pet.get_by_user_id(user_id)
     if not pet:

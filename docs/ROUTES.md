@@ -26,24 +26,91 @@
 
 ---
 
-## 2. 核心路由處理邏輯
+## 2. 每個路由的詳細說明
 
-### 2.1 虛擬寵物首頁 (`GET /pet`)
-- **業務邏輯**：
-  1. 呼叫 `Pet.get_by_user_id(DEV_USER_ID)` 獲取當前使用者的寵物。
-  2. 若資料庫無記錄，則自動調用 `Pet.create(DEV_USER_ID, "小食怪")` 建立一隻初始寵物。
-  3. 將包含 species 與 stages 關聯欄位的 `pet` 字典傳入 `pet/index.html` 進行渲染。
+### 2.1 我的材料庫 (首頁) (`GET /`)
+*   **輸入**：無
+*   **處理邏輯**：調用 `Ingredient.get_all()` 獲取所有材料清單。
+*   **輸出**：渲染 `ingredients/index.html`。
+*   **錯誤處理**：若資料庫連線失敗，返回空食材清單並在網頁提示。
 
-### 2.2 手動餵食 (`POST /pet/feed`)
-- **業務邏輯**：
-  1. 呼叫 `Pet.add_exp(pet_id, 10)` (每次手動餵食增加 10 經驗值)。
-  2. 控制器內部的 `Pet.add_exp` 會將流程委託至 `evolution_service.add_exp` 處理。
-  3. `evolution_service` 執行總經驗值加總，並呼叫 `calculate_level_from_exp` 計算新等級。
-  4. 若等級上升，自動檢查並調用 `check_and_evolve` 判定進化並解鎖對應圖鑑。
-  5. 最終回傳包含最新 EXP、進度條比率、等級、升級旗標、進化型態等資訊之 JSON。
+### 2.2 新增食材 (`POST /ingredient/add`)
+*   **輸入**：表單欄位 `name` (TEXT), `quantity` (REAL), `unit` (TEXT), `expiry_date` (TEXT)
+*   **處理邏輯**：
+    1. 驗證 `name` 與 `quantity` 是否填寫。
+    2. 將 `quantity` 轉為 float。
+    3. 調用 `Ingredient.create()` 插入資料庫。
+*   **輸出**：重導向至 `/`，並透過 Flash 顯示成功或失敗訊息。
+*   **錯誤處理**：欄位未填或數量不為數字時，Flash 提示錯誤並重導向回首頁。
 
-### 2.3 圖鑑篩選與展示 (`GET /collection`)
-- **業務邏輯**：
-  1. 呼叫 `collection_model.get_all_stages()` 取得所有種族與進化階段。
-  2. 呼叫 `collection_model.get_user_collection(DEV_USER_ID)` 取得已解鎖的階段 ID 集合 (Set)。
-  3. 透過 `in` 運算子於 HTML 中判定特定卡片是否顯示為彩色解鎖狀態或灰色鎖定狀態。
+### 2.3 編輯食材頁面 (`GET /ingredient/edit/<int:id>`)
+*   **輸入**：URL 參數 `id` (INTEGER)
+*   **處理邏輯**：調用 `Ingredient.get_by_id(id)`。
+*   **輸出**：渲染 `ingredients/edit.html`。
+*   **錯誤處理**：若找不到該食材，Flash 提示「找不到該食材！」並重導向回首頁。
+
+### 2.4 更新食材 (`POST /ingredient/update/<int:id>`)
+*   **輸入**：URL 參數 `id` (INTEGER)，表單欄位 `name`, `quantity`, `unit`, `expiry_date`
+*   **處理邏輯**：驗證欄位合法性後，調用 `Ingredient.update()`。
+*   **輸出**：重導向至 `/`。
+*   **錯誤處理**：驗證失敗時，重導向回編輯頁面並 Flash 錯誤。
+
+### 2.5 刪除食材 (`POST /ingredient/delete/<int:id>`)
+*   **輸入**：URL 參數 `id` (INTEGER)
+*   **處理邏輯**：調用 `Ingredient.delete(id)`。
+*   **輸出**：重導向至 `/`。
+*   **錯誤處理**：刪除失敗時，Flash 顯示錯誤訊息。
+
+### 2.6 推薦食譜 (`GET /recipes/recommend`)
+*   **輸入**：無
+*   **處理邏輯**：目前為靜態展示，未來將讀取 `Ingredient.get_all()` 進行食材匹配。
+*   **輸出**：渲染 `recipes/recommend.html`。
+
+### 2.7 虛擬寵物主頁 (`GET /pet`)
+*   **輸入**：無
+*   **處理邏輯**：調用 `Pet.get_by_user_id(DEV_USER_ID)`，若寵物不存在則自動調用 `Pet.create()` 建立預設寵物。
+*   **輸出**：渲染 `pet/index.html`。
+
+### 2.8 手動餵食互動 (`POST /pet/feed`)
+*   **輸入**：無
+*   **處理邏輯**：
+    1. 取得寵物 ID，調用 `Pet.add_exp(pet_id, 10)` 增加 10 點經驗值。
+    2. 自動觸發進化與升級檢查。
+*   **輸出**：回傳最新寵物狀態的 JSON 數據。
+
+---
+
+## 3. Jinja2 模板清單
+
+專案所使用的 HTML 模板均繼承共用模板並進行局部區塊（Block）覆寫：
+
+*   **共用基礎版型**：[base.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/base.html)
+    *   *說明*：包含 Glassmorphism 的全站導覽列、頁尾、背景粒子樣式與共用 CSS/JS 引用。
+*   **我的材料庫首頁**：[ingredients/index.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/ingredients/index.html)
+    *   *繼承*：`base.html`
+    *   *用途*：顯示目前的食材列表網格與快捷新增食材表單。
+*   **編輯食材頁面**：[ingredients/edit.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/ingredients/edit.html)
+    *   *繼承*：`base.html`
+    *   *用途*：顯示單一食材的修改表單。
+*   **食譜推薦頁面**：[recipes/recommend.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/recipes/recommend.html)
+    *   *繼承*：`base.html`
+    *   *用途*：呈現食譜推薦列表與匹配進度。
+*   **虛擬寵物主頁**：[pet/index.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/pet/index.html)
+    *   *繼承*：`base.html`
+    *   *用途*：呈現寵物外觀、Level、EXP 視覺化進度條與餵食互動按鈕。
+*   **圖鑑主頁面**：[collection/index.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/collection/index.html)
+    *   *繼承*：`base.html`
+    *   *用途*：以卡片網格展示所有寵物階段的解鎖與遮罩狀態。
+*   **型態詳情頁面**：[collection/detail.html](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/templates/collection/detail.html)
+    *   *繼承*：`base.html`
+    *   *用途*：呈現特定寵物形態的詳細故事與進化樹。
+
+---
+
+## 4. 路由骨架程式碼實作狀態
+
+目前專案的各路由模組程式碼已在 `app/routes/` 目錄下完成實作（相較於空骨架，已寫入完整的處理邏輯與資料庫互動）：
+- 食材管理路由：[ingredient.py](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/routes/ingredient.py)
+- 食譜推薦路由：[recipe.py](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/routes/recipe.py)
+- 寵物養成路由：[pet_routes.py](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/routes/pet_routes.py)
+- 進化與圖鑑 API 路由：[collection_routes.py](file:///c:/Users/linpi/Desktop/程式設計/goodjob/app/routes/collection_routes.py)

@@ -6,18 +6,6 @@ from app import create_app
 
 app = create_app()
 
-# ─── Flask-Login 初始化 ───
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = '請先登入才能使用此功能 🔒'
-login_manager.login_message_category = 'warning'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
-
 def init_db():
     with app.app_context():
         db.create_all()
@@ -34,52 +22,6 @@ def init_db():
             default_pet = Pet(user_id=1, name='小食怪', hunger=100, growth=0)
             db.session.add(default_pet)
             db.session.commit()
-
-
-# ════════════════════════════════════════
-#  首頁儀表板 (寵物養成系統)
-# ════════════════════════════════════════
-
-@app.route('/')
-@login_required
-def index():
-    user = current_user
-    pet = Pet.query.filter_by(user_id=user.id).first()
-    if not pet:
-        # 如果使用者沒有寵物，自動建立一隻
-        pet = Pet(user_id=user.id, name="小寶貝", hunger=100, growth=0)
-        db.session.add(pet)
-        db.session.commit()
-    return render_template('pet_dashboard.html', pet=pet)
-
-
-# ════════════════════════════════════════
-#  餵食 API
-# ════════════════════════════════════════
-
-@app.route('/feed', methods=['POST'])
-@login_required
-def feed():
-    user = current_user
-    pet = Pet.query.filter_by(user_id=user.id).first()
-    if not pet:
-        return jsonify({"success": False, "message": "找不到寵物 😢"}), 404
-        
-    if pet.hunger <= 0:
-        return jsonify({"success": False, "message": "寵物已經吃得太飽了，不需要再餵食了 💖"}), 400
-        
-    # 餵食減少飢餓度 (hunger)，增加成長值 (growth)
-    pet.hunger = max(0, pet.hunger - 10)
-    pet.growth += 10
-    db.session.commit()
-    
-    return jsonify({
-        "success": True,
-        "hunger": pet.hunger,
-        "growth": pet.growth,
-        "message": "餵食成功！成長值 +10，飢餓度 -10 ✨"
-    })
-
 
 # ════════════════════════════════════════
 #  認證路由：註冊 / 登入 / 登出
@@ -138,40 +80,3 @@ def register():
         return redirect(url_for('index'))
 
     return render_template('register.html')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip()
-        password = request.form.get('password', '')
-        remember = request.form.get('remember', False)
-
-        user = User.query.filter_by(email=email).first()
-
-        if user and user.check_password(password):
-            login_user(user, remember=bool(remember))
-            flash(f'歡迎回來，{user.display_name}！👋', 'success')
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('index'))
-        else:
-            flash('Email 或密碼錯誤，請重試', 'danger')
-            return render_template('login.html', email=email)
-
-    return render_template('login.html')
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('已成功登出，下次見！👋', 'info')
-    return redirect(url_for('index'))
-
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, port=5000)

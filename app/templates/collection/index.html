@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}寵物圖鑑 - 隨食隨地{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/collection.css') }}">
+<style>
+    /* 整合背景粒子於主版型 */
+    .bg-particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 背景裝飾粒子 -->
+<div class="bg-particles" aria-hidden="true">
+    <div class="particle particle-1"></div>
+    <div class="particle particle-2"></div>
+    <div class="particle particle-3"></div>
+    <div class="particle particle-4"></div>
+    <div class="particle particle-5"></div>
+</div>
+
+<div class="collection-container mt-4">
+    <!-- 頂部導航 -->
+    <nav class="collection-nav d-flex align-items-center mb-4">
+        <a href="{{ url_for('ingredient.index') }}" class="nav-back text-decoration-none d-flex align-items-center" id="nav-back-btn">
+            <span class="nav-back-icon fs-5 me-2">←</span>
+            <span>回首頁</span>
+        </a>
+        <div class="nav-title ms-auto fs-3 fw-bold">
+            <span class="nav-icon">📖</span> 寵物進化圖鑑
+        </div>
+        <div class="nav-spacer ms-auto"></div>
+    </nav>
+
+    <!-- 當前寵物狀態卡 -->
+    {% if pet %}
+    <section class="pet-status-card glass-card p-4 rounded-4 mb-4" id="pet-status-section"
+             style="--pet-primary: {{ pet.color_primary }}; --pet-secondary: {{ pet.color_secondary }};
+                    border: 1px solid rgba(255,255,255,0.15) !important;">
+        <div class="d-flex align-items-center flex-column flex-md-row">
+            <div class="status-pet-visual me-md-4 mb-3 mb-md-0">
+                <div class="pet-avatar-ring" style="border: 3px solid {{ pet.color_primary }}; background: linear-gradient(135deg, {{ pet.color_secondary }}, rgba(255,255,255,0.1));">
+                    <div class="pet-avatar d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <span class="pet-emoji" style="font-size: 3rem;">{{ pet.stage_emoji }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-info flex-grow-1 text-center text-md-start">
+                <h2 class="status-pet-name fw-bold text-white mb-2">{{ pet.pet_name or pet.species_name }}</h2>
+                <div class="status-stage mb-3">
+                    <span class="badge bg-success rounded-pill px-3 py-1 me-2">{{ pet.stage_name }}</span>
+                    <span class="badge bg-primary rounded-pill px-3 py-1">Lv.{{ pet.current_level }}</span>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="exp-bar progress" style="height: 12px; border-radius: 6px; background: rgba(255,255,255,0.05);">
+                        <div class="exp-bar-fill progress-bar" id="exp-bar-fill" style="width: 0%; background: linear-gradient(to right, {{ pet.color_primary }}, {{ pet.color_secondary }}); transition: width 1s ease;"></div>
+                    </div>
+                    <span class="exp-text text-muted mt-1 d-block fs-7" id="exp-text">EXP {{ pet.current_exp }}</span>
+                </div>
+            </div>
+            <!-- 開發用：快速加經驗值按鈕 -->
+            <div class="dev-tools ms-md-auto mt-3 mt-md-0">
+                <button class="btn btn-sm btn-outline-light rounded-pill px-4" id="add-exp-btn" data-exp="100" title="開發測試用">
+                    ⚡ +100 EXP
+                </button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- 收集進度 -->
+    <section class="progress-section glass-card p-4 rounded-4 mb-4" id="progress-section" style="border: 1px solid rgba(255,255,255,0.1) !important;">
+        <div class="progress-header d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-title fs-5 fw-bold text-white mb-0">
+                <span class="title-icon me-2">🏆</span> 收集進度
+            </h2>
+            <div class="progress-count fs-5 fw-bold">
+                <span class="progress-current" id="progress-current" style="color: #EC4899;">{{ progress.unlocked }}</span>
+                <span class="progress-divider mx-1">/</span>
+                <span class="progress-total">{{ progress.total }}</span>
+            </div>
+        </div>
+        <div class="progress-bar-wrapper">
+            <div class="progress" style="height: 14px; border-radius: 7px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                <div class="progress-bar" id="progress-bar-fill"
+                     style="width: {{ (progress.unlocked / progress.total * 100) if progress.total > 0 else 0 }}%;
+                            background: linear-gradient(to right, #8B5CF6, #EC4899) !important;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 種族篩選 -->
+    <section class="filter-section d-flex flex-wrap gap-2 mb-4">
+        <button class="filter-btn btn active" data-species="all" id="filter-all">全部</button>
+        {% for species in species_list %}
+        <button class="filter-btn btn" data-species="{{ species.id }}" id="filter-species-{{ species.id }}"
+                style="--filter-color: {{ species.color_primary }}; border-color: rgba(255,255,255,0.1); color: var(--text-main);">
+            {{ species.emoji }} {{ species.name }}
+        </button>
+        {% endfor %}
+    </section>
+
+    <!-- 圖鑑卡片網格 -->
+    <section class="collection-grid d-grid gap-4" id="collection-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+        {% for stage in all_stages %}
+        {% set is_unlocked = stage.id in unlocked_ids %}
+        <a href="{{ url_for('collection.collection_detail', stage_id=stage.id) }}"
+           class="collection-card glass-card text-decoration-none rounded-4 p-4 d-flex flex-column align-items-center justify-content-between {{ 'unlocked' if is_unlocked else 'locked' }}"
+           data-species="{{ stage.species_id }}"
+           data-stage-id="{{ stage.id }}"
+           id="card-stage-{{ stage.id }}"
+           style="--card-primary: {{ stage.color_primary }}; --card-secondary: {{ stage.color_secondary }};
+                  border: 1px solid rgba(255,255,255,0.1) !important;
+                  transition: all 0.3s ease;
+                  min-height: 280px;">
+            
+            <div class="card-glow"></div>
+            
+            <div class="card-image-area d-flex align-items-center justify-content-center rounded-circle mb-3"
+                 style="width: 110px; height: 110px; background: rgba(255,255,255,0.05); border: 2px dashed rgba(255,255,255,0.15);">
+                {% if is_unlocked %}
+                <span class="card-pet-emoji" style="font-size: 3.5rem;">{{ stage.emoji }}</span>
+                {% else %}
+                <span class="card-pet-emoji locked-emoji text-muted" style="font-size: 3rem; opacity: 0.5;">❓</span>
+                {% endif %}
+            </div>
+
+            <div class="card-info text-center w-100 mb-3">
+                <h3 class="card-name fs-5 fw-bold text-white mb-2">{{ stage.name if is_unlocked else '???' }}</h3>
+                <div class="card-meta d-flex justify-content-center gap-2 fs-7 text-muted mb-2">
+                    <span class="card-species">{{ stage.species_emoji }} {{ stage.species_name }}</span>
+                    <span class="card-level">Lv.{{ stage.level_required }}</span>
+                </div>
+                {% if not is_unlocked %}
+                <div class="card-unlock-hint text-warning fs-8">
+                    需達到 Lv.{{ stage.level_required }} 解鎖
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card-stage-indicator d-flex gap-1 justify-content-center w-100">
+                {% for i in range(1, 5) %}
+                <span class="stage-dot rounded-circle {{ 'active' if i <= stage.stage_order else '' }} {{ 'current' if i == stage.stage_order else '' }}"
+                      style="width: 8px; height: 8px; background: rgba(255,255,255,0.15); display: inline-block;"></span>
+                {% endfor %}
+            </div>
+        </a>
+        {% endfor %}
+    </section>
+</div>
+
+<!-- 進化動畫彈窗 -->
+{% include 'components/evolution_modal.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/collection.js') }}"></script>
+{% endblock %}

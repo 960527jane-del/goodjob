@@ -12,6 +12,9 @@ def list_ingredients():
     ingredients = Ingredient.get_by_user_id(user_id)
     return render_template('ingredient/list.html', ingredients=ingredients)
 
+# Register index as an alias endpoint pointing to list_ingredients
+ingredient_bp.add_url_rule('/', endpoint='index', view_func=list_ingredients)
+
 @ingredient_bp.route('/new')
 def new_ingredient():
     """

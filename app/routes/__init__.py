@@ -1,22 +1,26 @@
 from flask import Blueprint
 
-# 1. 宣告你原本的藍圖
+# 1. 宣告材料庫與食譜推薦藍圖 (供後續實作檔案 import)
 ingredient_bp = Blueprint('ingredient', __name__, url_prefix='/ingredients')
 recipe_bp = Blueprint('recipe', __name__, url_prefix='/recipes')
 
-# 2. 匯入你原本的路由實作（確保裡面的裝飾器如 @ingredient_bp.route 有被執行）
+# 2. 匯入路由實作，確保其中的裝飾器被執行
 from . import ingredient
 from . import recipe
 
-# 此檔案可作為 Blueprint 的註冊點，供 app.py 載入
+# 3. 匯入其他模組已宣告的藍圖
 from app.routes.main import main_bp
 from app.routes.cooking import cooking_bp
-from app.routes.pet import pet_bp
+from app.routes.pet_routes import pet_bp
+from app.routes.collection_routes import collection_bp
 
 def register_blueprints(app):
+    """
+    註冊全站所有 Blueprint
+    """
     app.register_blueprint(main_bp)
     app.register_blueprint(cooking_bp)
     app.register_blueprint(pet_bp)
-# 註冊你原本的藍圖
+    app.register_blueprint(collection_bp)
     app.register_blueprint(ingredient_bp)
     app.register_blueprint(recipe_bp)

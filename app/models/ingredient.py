@@ -67,3 +67,6 @@ class Ingredient(db.Model):
             db.session.rollback()
             logging.error(f"Error deleting ingredient: {e}")
             return False
+
+# Alias for backward compatibility
+IngredientModel = Ingredient

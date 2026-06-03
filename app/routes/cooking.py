@@ -68,4 +68,4 @@ def submit_report():
     else:
         flash("紀錄已建立，但飼料發放失敗。", "warning")
         
-    return redirect(url_for('pet.pet_page'))
+    return redirect(url_for('pet.pet_index'))

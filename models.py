@@ -14,6 +14,12 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     display_name = db.Column(db.String(80))
     cooking_count = db.Column(db.Integer, default=0)
+    
+    # F-04 寵物與飼料系統
+    pet_level = db.Column(db.Integer, default=1)
+    pet_exp = db.Column(db.Integer, default=0)
+    virtual_food = db.Column(db.Integer, default=0)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 關聯
@@ -21,6 +27,8 @@ class User(UserMixin, db.Model):
     achievements = db.relationship('UserAchievement', backref='user', lazy=True, cascade="all, delete-orphan")
     preference = db.relationship('UserPreference', backref='user', uselist=False, cascade="all, delete-orphan")
     allergens = db.relationship('UserAllergen', backref='user', lazy=True, cascade="all, delete-orphan")
+    ingredients = db.relationship('Ingredient', backref='user', lazy=True, cascade="all, delete-orphan")
+    cooking_histories = db.relationship('CookingHistory', backref='user', lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password):
         """設定密碼（自動 hash）"""
@@ -58,6 +66,7 @@ class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    required_ingredients = db.Column(db.Text, nullable=True) # F-02 食譜推薦所需食材清單
     image_url = db.Column(db.String(500), nullable=True)
     # F-07 新增欄位：用於偏好過濾
     tags = db.Column(db.String(200), default='')           # 逗號分隔標籤，如 'vegetarian,spicy,quick'
@@ -104,3 +113,21 @@ class UserAchievement(db.Model):
     achievement_id = db.Column(db.Integer, db.ForeignKey('achievement.id'), nullable=False)
     unlocked_at = db.Column(db.DateTime, default=datetime.utcnow)
     achievement = db.relationship('Achievement')
+
+class Ingredient(db.Model):
+    """F-01: 我的材料庫 (使用者擁有的食材)"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    quantity = db.Column(db.Integer, default=1)
+    expiry_date = db.Column(db.Date, nullable=True)  # F-03: 過期提醒
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class CookingHistory(db.Model):
+    """F-04, F-05: 烹飪歷史紀錄與回報"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True)
+    photo_url = db.Column(db.String(500), nullable=True) # 上傳的照片路徑
+    cooked_at = db.Column(db.DateTime, default=datetime.utcnow)
+

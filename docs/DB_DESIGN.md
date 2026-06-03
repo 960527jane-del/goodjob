@@ -1,115 +1,80 @@
-# 資料庫設計 - 智慧食譜推薦系統 (F-02)
-
-本文件依據前期的設計規劃，定義了「我的材料庫」底層資料庫的結構與關聯，並提供對應的建表語法。
-
-## 1. ER 圖（實體關係圖）
-
-本系統的核心在於管理使用者的可用食材，作為向外部 API 請求食譜推薦的基礎。由於目前為 MVP 版本，主要設計 `ingredients` 資料表。
-
-```mermaid
-erDiagram
-  INGREDIENTS {
-    integer id PK "主鍵"
-    string name "食材名稱"
-    real quantity "數量"
-    string unit "單位 (如: g, 顆)"
-    date expiry_date "有效期限 (YYYY-MM-DD)"
-    datetime created_at "建立時間"
-  }
-```
-
-## 2. 資料表詳細說明
-
-### `ingredients` (我的材料庫)
-儲存使用者目前擁有的食材清單，作為食譜推薦系統的查詢基準。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :---: | :--- |
-| `id` | INTEGER | ✅ | 主鍵 (Primary Key)，自動遞增 |
-| `name` | TEXT | ✅ | 食材名稱（例如：雞肉、洋蔥、番茄） |
-| `quantity` | REAL | ✅ | 剩餘數量 |
-| `unit` | TEXT | ✅ | 數量單位（例如：g, kg, 顆, 把） |
-| `expiry_date` | TEXT | ❌ | 有效期限，ISO 格式 `YYYY-MM-DD`，用於優先推薦即期食材 |
-| `created_at` | DATETIME | ✅ | 建立時間，預設為 `CURRENT_TIMESTAMP` |
-
-## 3. SQL 建表語法
-
-SQLite 建表語法已儲存於 `database/schema.sql`，可用於初始化系統資料庫。
-
-## 4. Python Model 程式碼
-
-處理對 SQLite 資料庫的 CRUD (建立、讀取、更新、刪除) 操作邏輯，已實作於 `app/models/ingredient.py`，使用 Python 內建的 `sqlite3` 模組，保持系統輕量化。
 # 隨食隨地 - 資料庫設計文件 (DB Design)
 
-## 1. ER 圖（實體關係圖）
+本文件基於 `docs/PRD.md` 與 `docs/ARCHITECTURE.md`，定義系統的資料庫結構與實體關聯圖 (ERD)。我們使用 SQLite 搭配 SQLAlchemy ORM。
+
+## 1. 實體關聯圖 (Entity-Relationship Diagram)
 
 ```mermaid
 erDiagram
-  USER ||--o{ PET : owns
-  USER ||--o{ FEED_INVENTORY : has
-  USER ||--o{ COOKING_RECORD : creates
+    USER ||--o{ INGREDIENT : "擁有"
+    USER ||--o{ COOKING_HISTORY : "記錄"
+    USER ||--o{ USER_PREFERENCE : "設定"
+    USER ||--o{ COLLECTION : "收藏"
+    RECIPE ||--o{ COOKING_HISTORY : "被記錄"
+    RECIPE ||--o{ COLLECTION : "被收藏"
 
-  USER {
-    int id PK
-    string username
-    string email
-    datetime created_at
-  }
-
-  PET {
-    int id PK
-    int user_id FK
-    string name
-    int level
-    int exp
-    datetime updated_at
-  }
-
-  FEED_INVENTORY {
-    int id PK
-    int user_id FK
-    int count
-    datetime updated_at
-  }
-
-  COOKING_RECORD {
-    int id PK
-    int user_id FK
-    string image_path
-    string status
-    datetime created_at
-  }
+    USER {
+        int id PK
+        string username "帳號"
+        string email "信箱"
+        int pet_level "寵物等級 (F-04)"
+        int pet_exp "寵物經驗值 (F-04)"
+        int virtual_food "虛擬飼料庫存 (F-04)"
+    }
+    
+    INGREDIENT {
+        int id PK
+        int user_id FK
+        string name "食材名稱"
+        int quantity "數量"
+        date expiry_date "保存期限 (F-03)"
+    }
+    
+    RECIPE {
+        int id PK
+        string title "食譜名稱"
+        string required_ingredients "所需食材清單 (F-02)"
+        string description "步驟"
+    }
+    
+    COOKING_HISTORY {
+        int id PK
+        int user_id FK
+        int recipe_id FK
+        string photo_url "回報照片路徑 (F-04)"
+        datetime cooked_at "完成時間"
+    }
 ```
 
-## 2. 資料表詳細說明
+## 2. 資料表說明與 SQLAlchemy 欄位定義
 
-### 2.1 USER (使用者表)
-儲存系統使用者的基本資訊。
-- `id` (INTEGER, PK): 使用者唯一識別碼
-- `username` (VARCHAR, 必填): 使用者名稱
-- `email` (VARCHAR, 必填, 唯一): 電子郵件
-- `created_at` (DATETIME): 帳號建立時間
+### 2.1 User (使用者表)
+負責記錄登入資訊與**寵物狀態**。
+- `id` (Integer, Primary Key)
+- `pet_level` (Integer): 寵物等級，預設 1。
+- `pet_exp` (Integer): 寵物當前累積經驗值，預設 0。
+- `virtual_food` (Integer): 可用的虛擬飼料數量，透過烹飪回報獲得。
 
-### 2.2 PET (虛擬寵物表)
-儲存每位使用者的虛擬寵物狀態 (F-03)。
-- `id` (INTEGER, PK): 寵物唯一識別碼
-- `user_id` (INTEGER, FK): 關聯的使用者 ID
-- `name` (VARCHAR, 必填): 寵物名稱
-- `level` (INTEGER, 必填): 當前等級，預設 1
-- `exp` (INTEGER, 必填): 當前經驗值，預設 0
-- `updated_at` (DATETIME): 最後狀態更新時間
+### 2.2 Ingredient (我的材料庫)
+支援 **F-01 (食材管理)** 與 **F-03 (過期提醒)**。
+- `id` (Integer, Primary Key)
+- `user_id` (Integer, Foreign Key -> User.id)
+- `name` (String): 食材名稱。
+- `quantity` (Integer): 數量。
+- `expiry_date` (Date): 保存期限。過期提醒將比對此欄位。
 
-### 2.3 FEED_INVENTORY (飼料庫存表)
-管理使用者透過回報料理獲得的虛擬飼料數量 (F-04)。
-- `id` (INTEGER, PK): 庫存紀錄識別碼
-- `user_id` (INTEGER, FK): 關聯的使用者 ID
-- `count` (INTEGER, 必填): 飼料數量，預設 0
-- `updated_at` (DATETIME): 庫存最後變動時間
+### 2.3 Recipe (食譜庫)
+支援 **F-02 (食譜推薦)**。
+- `id` (Integer, Primary Key)
+- `title` (String): 食譜標題。
+- `required_ingredients` (Text): 紀錄此食譜需要的食材字串 (可為 JSON 或純文字)，用於在推薦時比對 `Ingredient`。
 
-### 2.4 COOKING_RECORD (烹飪紀錄表)
-紀錄使用者回報的料理紀錄，用作發放飼料的依據 (F-04)。
-- `id` (INTEGER, PK): 紀錄唯一識別碼
-- `user_id` (INTEGER, FK): 關聯的使用者 ID
-- `image_path` (VARCHAR, 可空): 上傳的料理圖片路徑
-- `status` (VARCHAR, 必填): 紀錄狀態（如 'completed'）
-- `created_at` (DATETIME): 紀錄提交時間
+### 2.4 CookingHistory (烹飪歷史)
+支援 **F-04 (烹飪回報)** 與 **F-05 (成就紀錄)**。
+- `id` (Integer, Primary Key)
+- `user_id` (Integer, Foreign Key -> User.id)
+- `recipe_id` (Integer, Foreign Key -> Recipe.id): 對應完成的食譜。
+- `photo_url` (String): 若使用者選擇拍照回報，此欄位儲存圖檔路徑。
+- `cooked_at` (DateTime): 紀錄完成時間。
+
+*(註：詳細的欄位與其他衍生功能表，如 `Collection`、`Achievement`，請參閱實際的 `models.py` 程式碼)*

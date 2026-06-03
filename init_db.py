@@ -29,10 +29,6 @@ with app.app_context():
         db.session.commit()
         print("Default test user created in ORM!")
     else:
-        # 確保密碼也是雜湊妥當的 (如果 schema.sql 插入的是文字或舊雜湊)
-        if not user.password_hash or not user.password_hash.startswith(('scrypt:', 'pbkdf2:')):
-            user.set_password('1234')
-            db.session.commit()
-            print("Default test user password updated in ORM!")
-        else:
-            print("Default test user already exists and is configured.")
+        user.set_password('1234')
+        db.session.commit()
+        print("Default test user password reset to '1234' in ORM!")

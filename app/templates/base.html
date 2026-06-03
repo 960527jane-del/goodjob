@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="隨「食」隨地 — 食材庫存管理、食譜推薦與可愛的虛擬寵物陪伴系統">
+    <meta name="description" content="隨「食」隨地 — 虛擬寵物養成系統">
     <title>{% block title %}隨食隨地{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
@@ -160,23 +160,14 @@
     <!-- 導覽列 -->
     <nav class="navbar navbar-expand-lg sticky-top mb-5 navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('pet.pet_index') }}">✨ 隨食隨地</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">✨ 隨食隨地</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('ingredient.index') }}"><i class="fa-solid fa-carrot"></i> 我的材料庫</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('pet.pet_index') }}"><i class="fa-solid fa-paw"></i> 虛擬寵物</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('collection.collection_index') }}"><i class="fa-solid fa-book-open"></i> 寵物圖鑑</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('cooking.report_page') }}"><i class="fa-solid fa-fire-burner"></i> 烹飪回報</a>
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fa-solid fa-paw"></i> 寵物養成</a>
                     </li>
                     
                     <!-- 登入與使用者選單 -->
@@ -186,9 +177,6 @@
                                 👤 {{ current_user.display_name }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item text-dark" href="{{ url_for('profile') }}">📈 我的成就</a></li>
-                                <li><a class="dropdown-item text-dark" href="{{ url_for('preferences') }}">⚙️ 偏好設定</a></li>
-                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">🚪 登出</a></li>
                             </ul>
                         </li>

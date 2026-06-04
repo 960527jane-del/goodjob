@@ -1,11 +1,11 @@
 """
-圖鑑路由 — 頁面與 API 端點
+圖鑑路由 — 頁面與 API 端點 (F-06)
 Blueprint: collection_bp
 """
 from flask import Blueprint, render_template, jsonify, request
-from models import pet as pet_model
-from models import collection as collection_model
-from services import evolution_service
+from app.models import pet as pet_model
+from app.models import collection as collection_model
+from app.services import evolution_service
 from config import DEV_USER_ID
 
 collection_bp = Blueprint('collection', __name__)

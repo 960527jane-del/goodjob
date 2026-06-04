@@ -1,9 +1,9 @@
-{% extends 'base.html' %}
-{% block title %}智慧食譜推薦 - 隨食隨地{% endblock %}
+﻿{% extends 'base.html' %}
+{% block title %}?箸憌??刻 - ?券??典{% endblock %}
 {% block content %}
 <div class="text-center mb-5 mt-3">
-    <h2 class="section-title text-gradient">智慧食譜推薦</h2>
-    <p class="text-light-muted mt-2">根據您的材料庫，我們為您精選了以下美味料理</p>
+    <h2 class="section-title text-gradient">?箸憌??刻</h2>
+    <p class="text-light-muted mt-2">?寞??函???摨恬???函移?訾?隞乩?蝢??</p>
 </div>
 
 {% if recipes %}
@@ -15,15 +15,15 @@
                 <div class="card-body d-flex flex-column p-4">
                     <h5 class="card-title fw-bold text-light mb-4">{{ recipe.title }}</h5>
                     <div class="mb-4 d-flex gap-2 flex-wrap">
-                        <span class="badge glass-badge text-success">現有 {{ recipe.usedIngredientCount }} 項食材</span>
+                        <span class="badge glass-badge text-success">?暹? {{ recipe.usedIngredientCount }} ????/span>
                         {% if recipe.missedIngredientCount > 0 %}
-                            <span class="badge glass-badge text-warning">尚缺 {{ recipe.missedIngredientCount }} 項配料</span>
+                            <span class="badge glass-badge text-warning">撠撩 {{ recipe.missedIngredientCount }} ????/span>
                         {% else %}
-                            <span class="badge glass-badge text-info">配料齊全！</span>
+                            <span class="badge glass-badge text-info">??朣嚗?/span>
                         {% endif %}
                     </div>
                     <div class="mt-auto pt-2">
-                        <a href="{{ url_for('recipe.recipe_detail', id=recipe.id) }}" class="btn btn-primary btn-gradient w-100 rounded-pill">查看詳細教學</a>
+                        <a href="{{ url_for('recipe.recipe_detail', id=recipe.id) }}" class="btn btn-primary btn-gradient w-100 rounded-pill">?亦?閰喟敦?飛</a>
                     </div>
                 </div>
             </div>
@@ -32,9 +32,9 @@
     </div>
 {% else %}
     <div class="text-center py-5 glass-card mt-4">
-        <h4 class="text-light opacity-75 mb-3">查無推薦食譜</h4>
-        <p class="text-muted mb-4">可能是因為您的材料庫還沒有食材，或是找不到適合的組合。</p>
-        <a href="{{ url_for('ingredient.new_ingredient') }}" class="btn btn-primary btn-gradient rounded-pill px-4">去新增食材</a>
+        <h4 class="text-light opacity-75 mb-3">?亦?刻憌?</h4>
+        <p class="text-muted mb-4">?航?臬??箸???澈????????曆??圈??蝯???/p>
+        <a href="{{ url_for('ingredient.new_ingredient') }}" class="btn btn-primary btn-gradient rounded-pill px-4">?餅憓???/a>
     </div>
 {% endif %}
 {% endblock %}

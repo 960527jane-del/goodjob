@@ -1,4 +1,4 @@
-from flask import render_template, current_app, flash, redirect, url_for
+from flask import render_template, current_app, flash
 import requests
 from . import recipe_bp
 from app.models.ingredient import IngredientModel
@@ -40,9 +40,9 @@ def get_mock_recipe_detail(recipe_id):
 @recipe_bp.route('/recommend')
 def recommend():
     """
-    [GET] 導向智慧食譜推薦頁面，取代舊的推薦說明頁面。
+    [GET] 顯示食譜推薦說明頁面
     """
-    return redirect(url_for('recipe.list_recipes'))
+    return render_template('recipes/recommend.html')
 
 
 @recipe_bp.route('/')

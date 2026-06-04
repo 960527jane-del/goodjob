@@ -1,7 +1,7 @@
 """
-圖鑑 Model — 處理寵物圖鑑的 CRUD 操作
+圖鑑 Model — 處理寵物圖鑑的 CRUD 操作 (F-06)
 """
-from models.db import get_db
+from app.database import get_db
 
 
 def get_all_stages():

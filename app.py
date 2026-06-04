@@ -11,21 +11,10 @@ app = create_app()
 # ════════════════════════════════════════
 
 @app.route('/')
-@login_required
 def index():
-    user = current_user
-    pet = Pet.query.filter_by(user_id=user.id).first()
-    if not pet:
-        # 如果使用者沒有寵物，自動建立一隻
-        pet = Pet(user_id=user.id, name="小寶貝", hunger=100, growth=0)
-        db.session.add(pet)
-        db.session.commit()
-    return render_template('pet_dashboard.html', pet=pet)
+    # 首頁顯示食譜大廳 - 無需登入
+    return render_template('index.html')
 
-
-# ════════════════════════════════════════
-#  餵食 API
-# ════════════════════════════════════════
 
 @app.route('/feed', methods=['POST'])
 @login_required
@@ -49,3 +38,7 @@ def feed():
         "growth": pet.growth,
         "message": "餵食成功！成長值 +10，飢餓度 -10 ✨"
     })
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

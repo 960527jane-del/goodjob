@@ -1,5 +1,15 @@
 def register_blueprints(app):
     """
-    不註冊任何藍圖，所有路由均由 app.py 統一接管
+    註冊所有 Blueprint 到 Flask 應用程式
     """
-    pass
+    from app.routes.main import main_bp
+    from app.routes.pet_routes import pet_bp
+    from app.routes.collection_routes import collection_bp
+    from app.routes.cooking import cooking_bp
+    from app.routes.ingredient import ingredient_bp
+    
+    app.register_blueprint(main_bp)
+    app.register_blueprint(pet_bp)
+    app.register_blueprint(collection_bp)
+    app.register_blueprint(cooking_bp)
+    app.register_blueprint(ingredient_bp)

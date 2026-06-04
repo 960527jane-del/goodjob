@@ -6,7 +6,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 資料庫設定
-DATABASE = os.path.join(BASE_DIR, 'instance', 'goodjob.db')
+DATABASE = os.path.join(BASE_DIR, 'instance', 'database.db')
 
 # Flask 設定
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')

@@ -1,45 +1,36 @@
+"""
+隨「食」隨地 — Flask 應用程式初始化與 Blueprint 註冊 (F-01, F-02, F-03, F-06)
+"""
 import os
 from flask import Flask
-from app.models import db
-from app.routes import register_blueprints
+from app.database import close_db
+from sql_models import db
 
 def create_app(test_config=None):
-    # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     
-    app.config.from_mapping(
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
-        SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.instance_path, 'database.db'),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    )
-
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
-
-    # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
-        
-    # Ensure uploads folder exists
-    try:
-        os.makedirs(os.path.join(app.root_path, 'static', 'uploads'))
-    except OSError:
-        pass
-
-    # Initialize extensions
+    # Load configuration
+    from config import DATABASE, SECRET_KEY
+    app.config['DATABASE'] = DATABASE
+    app.config['SECRET_KEY'] = SECRET_KEY
+    
+    # Configure SQLAlchemy
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, 'database.db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Ensure instance directory exists
+    os.makedirs(app.instance_path, exist_ok=True)
+    
+    # Register raw db teardown
+    app.teardown_appcontext(close_db)
+    
+    # Initialize SQLAlchemy
     db.init_app(app)
-
     with app.app_context():
-        # Create all tables using SQLAlchemy (matches schema.sql design)
         db.create_all()
-
-    # Register blueprints
+        
+    # Register Blueprints
+    from app.routes import register_blueprints
     register_blueprints(app)
-
+    
     return app

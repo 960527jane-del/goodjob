@@ -1,147 +1,189 @@
-# 隨食隨地 - 系統架構文件 (Architecture)
+# 隨「食」隨地 — 系統架構文件 (System Architecture)
+
+本文件詳細規劃並描述「隨「食」隨地」系統（特別是針對 F-06 寵物進化圖鑑功能與 F-04 烹飪回報）的軟體架構、目錄結構、元件職責與關鍵設計決策。
+
+---
 
 ## 1. 技術架構說明
 
-本專案「隨食隨地」採用傳統的後端渲染 (Server-Side Rendering, SSR) 架構，不進行前後端分離。透過這個架構，我們能快速開發出包含烹飪回報 (F-04) 與虛擬寵物養成 (F-03) 等核心功能的 MVP 產品。
+本系統採用經典的 **MVC (Model-View-Controller)** 設計模式，配合服務層（Service Layer）來處理複雜的業務邏輯。此架構能有效解耦資料、呈現與控制邏輯，提升系統的擴充性與可維護性。
 
-### 選用技術與原因
-- **後端：Python + Flask**
-  - **原因**：Flask 是輕量級的 Python Web 框架，適合小型至中型專案。它靈活度高，能快速建立 API 與路由，並且有豐富的套件生態系可供後續擴展（例如未來可加入 AI 圖像辨識）。
-- **模板引擎：Jinja2**
-  - **原因**：內建於 Flask 中，能夠將後端傳遞的資料（如寵物經驗值、飼料數量）動態渲染成 HTML 頁面。
-- **資料庫：SQLite + SQLAlchemy**
-  - **原因**：SQLite 是輕量級的關聯式資料庫，不需要額外設定資料庫伺服器，非常適合開發初期。透過 SQLAlchemy (ORM)，能用 Python 程式碼直覺地操作資料庫表（如使用者表、飼料庫存表、寵物狀態表），降低 SQL 語法錯誤風險。
-- **前端：HTML / CSS / Vanilla JavaScript**
-  - **原因**：配合 Jinja2 進行頁面渲染，使用原生 JS 處理輕量級的互動（如點擊餵食按鈕、進度條動畫、圖片上傳預覽），不引入過度複雜的前端框架（如 React/Vue），降低開發成本。
+### 1.1 技術選型與原因
 
-### Flask MVC 模式說明
-專案將遵循 MVC（Model-View-Controller）的設計概念：
-- **Model（資料模型）**：負責與 SQLite 互動，定義資料表結構（例如 `User`, `Pet`, `CookingRecord`），並處理資料的讀寫與商業邏輯（如經驗值升級計算、飼料增減防呆）。
-- **View（視圖）**：負責畫面呈現，由 Jinja2 模板（`*.html`）與靜態檔案（CSS, JS）組成。負責將 Controller 傳來的資料渲染成最終網頁。
-- **Controller（控制器）**：由 Flask 的路由（Routes）擔任。負責接收使用者的 HTTP 請求（例如回報烹飪完成、點擊餵食），呼叫對應的 Model 處理資料，並將結果傳遞給 View 進行渲染或回傳 JSON。
+*   **後端框架：Python + Flask**
+    *   *選用原因*：Flask 是一款輕量級且高度靈活的微型框架（Micro-framework），非常適合 MVP 階段快速開發與迭代，且能輕易融入模組化設計。
+*   **前端渲染：Jinja2 模板引擎**
+    *   *選用原因*：Jinja2 是 Flask 預設的模板引擎，支持在 HTML 中動態插入後端數據與渲染邏輯。採用「伺服器端渲染 (SSR)」免去了維護繁雜的前後端分離專案的成本，極適合小規模協作與快速成型。
+*   **資料庫與 ORM 雙重架構：SQLite + SQLAlchemy & Raw sqlite3**
+    *   *選用原因*：為了兼顧開發效率與底層控制力，系統採用了兩種存取機制。
+        *   **SQLAlchemy ORM**：用於使用者權限、成就系統、飲食偏好（F-02, F-03）等業務，利用其 ORM 關係映射與交易機制（Transaction）快速建模。
+        *   **Raw SQLite 連線**：用於食材庫存（F-01）與寵物養成/進化圖鑑（F-03, F-06），利用 SQL 原生寫法進行高度靈活的 JOIN 查詢與輕量化資料處理。
+        *   兩者均連接至同一個本地資料庫 `instance/database.db`，確保資料的單一真實來源。
+*   **前端邏輯：HTML5 + CSS3 + JavaScript (Vanilla JS)**
+    *   *選用原因*：不依賴大型前端框架（如 React/Vue），使用原生 CSS 與 JavaScript 實作 Glassmorphism（毛玻璃效果）的 UI 風格與進化動畫，降低系統複雜度並提高載入效能。
+
+### 1.2 Flask MVC 模式說明
+
+*   **Model (資料模型層)**：
+    *   位於 `app/models/`，負責直接存取 SQLite 資料庫，定義資料表存取邏輯（如 `Ingredient`、`Pet`、`Collection`、`FeedInventory`、`CookingRecord` 的 CRUD 運作），並封裝資料校驗與變更邏輯。
+*   **View (視圖呈現層)**：
+    *   位於 `app/templates/` 與 `app/static/`，使用 HTML5/Jinja2 模板與 CSS 決定使用者的視覺界面，配合 JavaScript 處理前端互動與動畫（如圖鑑卡片翻面、進化光效、圖片上傳預覽）。
+*   **Controller (控制器/路由層)**：
+    *   位於 `app/routes/`，定義系統的所有 HTTP 路由與 API端點，負責接收使用者請求、調用對應的 Model 或 Service 處理資料，最後決定要渲染哪個 Jinja2 模板或返回 JSON 數據。
+*   **Service (服務層 - 額外擴充)**：
+    *   位於 `app/services/`，當業務邏輯過於複雜（例如進化條件判定與經驗值跳級計算）不適合寫在 Controller 或 Model 中時，將其提取至 Service 層（如 `EvolutionService`）進行統一封裝，保持 Controller 的簡潔度。
 
 ---
 
 ## 2. 專案資料夾結構
 
-建議採用模組化的結構，將不同職責的檔案分開，便於維護與團隊協作。
+以下為整個專案的整合目錄結構，所有主要邏輯皆集中於 `app/` 套件目錄下：
 
 ```text
-app.py                  # 應用程式執行入口
-requirements.txt        # Python 套件相依清單
-README.md               # 專案說明文件
-docs/                   # 專案文件 (PRD, 架構圖等)
-instance/
-└── database.db         # SQLite 資料庫檔案
-├── app/                  # 主要應用程式邏輯
-│   ├── __init__.py       # Flask app 實例化與註冊設定
-│   ├── config.py         # 系統設定檔（包含外部 API Key 等）
+goodjob/
+├── app/                        # 應用程式主要套件目錄
+│   ├── database.py             # 資料庫連線管理與初始化工具
 │   │
-│   ├── models/           # (Model) 資料庫模型
+│   ├── models/                 # [Model] 資料庫存取與邏輯層
 │   │   ├── __init__.py
-│   │   └── ingredient.py # 處理「我的材料庫」的資料邏輯
+│   │   ├── ingredient.py       # 食材管理 Model (F-01)
+│   │   ├── pet.py              # 寵物狀態與 CRUD Model (F-03/F-06)
+│   │   ├── collection.py       # 寵物圖鑑資料 CRUD Model (F-06)
+│   │   ├── feed_inventory.py   # 飼料庫存 ORM Model (F-04)
+│   │   └── cooking_record.py   # 烹飪紀錄 ORM Model (F-04)
 │   │
-│   ├── routes/           # (Controller) Flask 路由與 API 串接邏輯
+│   ├── routes/                 # [Controller] 路由與 API 端點
 │   │   ├── __init__.py
-│   │   ├── recipe.py     # 食譜推薦相關路由 (列表、詳細頁面)
-│   │   └── api_client.py # 封裝與外部食譜 API 溝通的邏輯
+│   │   ├── ingredient.py       # 食材管理路由 (F-01)
+│   │   ├── recipe.py           # 食譜推薦路由 (F-02)
+│   │   ├── pet_routes.py       # 虛擬寵物養成路由 (F-03/F-04/F-06)
+│   │   ├── collection_routes.py# 寵物圖鑑與進化 API 路由 (F-06)
+│   │   └── cooking.py          # 烹飪回報與飼料發放路由 (F-04)
 │   │
-│   ├── templates/        # (View) Jinja2 HTML 模板
-│   │   ├── base.html     # 共用版型（包含 Navigation, Header）
-│   │   └── recipe/
-│   │       ├── list.html   # 推薦食譜列表頁
-│   │       └── detail.html # 單一食譜詳細頁面
+│   ├── services/               # [Service] 核心業務邏輯服務層
+│   │   └── evolution_service.py# 寵物經驗值計算與進化引擎 (F-06)
 │   │
-│   └── static/           # 靜態資源 (CSS, JS, 圖片)
+│   ├── templates/              # [View] Jinja2 HTML 模板
+│   │   ├── base.html           # 全站統一的 Glassmorphism 共用版型
+│   │   ├── ingredients/
+│   │   │   ├── index.html      # 我的材料庫首頁 (F-01)
+│   │   │   └── edit.html       # 食材編輯頁面 (F-01)
+│   │   ├── recipes/
+│   │   │   └── recommend.html  # 食譜推薦展示頁 (F-02)
+│   │   ├── pet/
+│   │   │   └── index.html      # 虛擬寵物互動頁面 (F-03/F-04)
+│   │   ├── collection/
+│   │   │   ├── index.html      # 寵物圖鑑展示頁面 (F-06)
+│   │   │   └── detail.html     # 寵物階段詳情頁面 (F-06)
+│   │   ├── cooking/
+│   │   │   └── index.html      # 烹飪照片回報與進度表單頁面 (F-04)
+│   │   └── components/
+│   │       └── evolution_modal.html # 進化動畫彈窗組件
+│   │
+│   └── static/                 # 靜態資源 (CSS, JS, 圖片)
 │       ├── css/
-│       │   └── style.css # 共用樣式與 Loading 動畫設定
-│       └── js/
-│           └── main.js   # 處理前端簡易互動 (如點擊載入中的動畫)
+│       │   ├── style.css       # 共用樣式表
+│       │   └── collection.css  # 圖鑑專屬樣式表
+│       ├── js/
+│       │   └── collection.js   # 圖鑑與進化互動 JS 腳本
+│       ├── images/
+│       │   └── pets/           # 儲存寵物進化各階段的圖片
+│       └── uploads/            # 儲存使用者上傳的料理圖片 (F-04)
 │
-└── instance/             # 存放不需要進版控的本地資料庫
-    └── database.db       # SQLite 資料庫檔案
+├── sql_models.py               # 共享的 SQLAlchemy ORM 結構 (User, Preferences, Achievements 等)
+│
+├── database/
+│   └── schema.sql              # 統一 SQLite 建表語法與種子資料
+│
+├── instance/
+│   └── database.db             # 運行時生成的 SQLite 資料庫檔案
+│
+├── docs/                       # 系統說明文件
+│   ├── PRD.md                  # 專案需求文件
+│   ├── ARCHITECTURE.md         # 本系統架構文件
+│   ├── DB_DESIGN.md            # 資料庫設計文件
+│   ├── FLOWCHART.md            # 使用者與系統流程圖
+│   └── ROUTES.md               # 路由與 API 設計文件
+│
+├── app.py                      # Flask 專案唯一啟動入口
+├── config.py                   # 專案全局設定檔
+├── init_db.py                  # 資料庫初始化腳本
+└── requirements.txt            # Python 套件依賴清單
 ```
 
 ---
 
-## 3. 元件關係圖
+## 3. 元件關係與資料流向
 
-以下展示使用者發起請求後，系統各元件的資料流動與互動關係：
+以下展示使用者在瀏覽器操作系統時，前後端與資料庫的關鍵資料流向：
 
-```mermaid
-sequenceDiagram
-    participant Browser as 瀏覽器 (使用者)
-    participant Route as Flask Route (recipe.py)
-    participant Model as Database Model (ingredient.py)
-    participant API as 外部食譜 API (API Client)
-    participant Template as Jinja2 Template (list.html)
-
-    Browser->>Route: 1. GET /recipes (請求推薦食譜)
-    Route->>Model: 2. 查詢「我的材料庫」現有食材
-    Model-->>Route: 回傳可用食材清單
-    Route->>API: 3. 發送 HTTP 請求 (帶入食材清單作為參數)
-    API-->>Route: 4. 回傳推薦食譜 JSON 資料
-    Route->>Route: 5. 資料清洗、比對缺漏食材
-    Route->>Template: 6. 將處理後的資料傳遞給 Template
-    Template-->>Route: 7. 渲染 HTML 頁面
-    Route-->>Browser: 8. 回傳最終 HTML 給使用者瀏覽
-以下是系統核心運作流程的關係圖，說明瀏覽器、Flask Controller、Model 與資料庫間的互動：
+### 3.1 頁面渲染資料流 (SSR)
+當使用者要求瀏覽圖鑑頁面時：
 
 ```mermaid
 sequenceDiagram
     participant Browser as 瀏覽器 (Frontend)
     participant Route as Flask Route (Controller)
-    participant Model as SQLAlchemy (Model)
-    participant DB as SQLite (Database)
+    participant Model as Collection Model
+    participant DB as SQLite Database
+    participant Template as Jinja2 Template (View)
 
-    %% 流程 1：載入寵物頁面
-    Browser->>Route: GET /pet (請求寵物頁面)
-    Route->>Model: 查詢寵物狀態與飼料庫存
-    Model->>DB: SELECT query
-    DB-->>Model: 回傳資料
-    Model-->>Route: 返回 User, Pet 物件
-    Route-->>Browser: 透過 Jinja2 渲染 pet.html 並回傳
+    Browser->>Route: GET /collection 請求
+    Route->>Model: 查詢使用者已解鎖的圖鑑 (get_unlocked_stages)
+    Model->>DB: SELECT user_collection JOIN pet_stages
+    DB-->>Model: 回傳資料庫記錄
+    Model-->>Route: 傳回 Python Dict 列表
+    Route->>Template: 傳入圖鑑清單資料進行渲染
+    Template-->>Route: 生成包含動態數據的 HTML 原始碼
+    Route-->>Browser: 回傳 200 OK 網頁內容
+    Note over Browser: 渲染 Glassmorphism 卡片網格
+```
 
-    %% 流程 2：回報料理完成 (F-04)
-    Browser->>Route: POST /cooking/report (附帶照片)
-    Route->>Model: 建立烹飪紀錄 & 增加飼料 (Transaction)
-    Model->>DB: INSERT & UPDATE
-    DB-->>Model: 寫入成功
-    Model-->>Route: 飼料發放成功
-    Route-->>Browser: 重新導向或回傳 JSON 成功訊息
+### 3.2 異步 API 資料流 (AJAX)
+當使用者在寵物養成頁面點擊「手動餵食」觸發經驗值變更並判定進化時：
 
-    %% 流程 3：餵食寵物 (F-03, F-04)
-    Browser->>Route: POST /pet/feed (點擊餵食)
-    Route->>Model: 檢查庫存、扣除飼料、增加 EXP (檢查升級)
-    Model->>DB: UPDATE query (Transaction)
-    DB-->>Model: 更新成功
-    Model-->>Route: 回傳最新等級、經驗值與庫存
-    Route-->>Browser: 回傳 JSON (觸發前端動畫)
+```mermaid
+sequenceDiagram
+    participant Browser as 瀏覽器 (Frontend JS)
+    participant Route as Flask Route (Controller)
+    participant Service as Evolution Service (Logic)
+    participant Model as Pet Model
+    participant DB as SQLite Database
+
+    Browser->>Route: POST /pet/feed 請求 (AJAX)
+    Route->>Model: 取得當前寵物狀態 (get_pet_by_user)
+    Model->>DB: SELECT * FROM user_pets
+    DB-->>Model: 回傳寵物原始數據
+    Model-->>Route: 傳回寵物 Dict
+    
+    Route->>Service: 呼叫進化判定與計算 (check_and_evolve)
+    Note over Service: 1. 累加經驗值並判定是否升級<br/>2. 判斷是否達到進化等級門檻<br/>3. 計算出新的進化階段 ID
+    
+    alt 觸發升級/進化
+        Service->>Model: 更新等級與進化階段 (update_pet_stage)
+        Service->>Model: 寫入圖鑑解鎖紀錄 (unlock_stage)
+        Model->>DB: INSERT INTO user_collection
+        DB-->>Model: 成功
+    end
+    
+    Service-->>Route: 回傳進化結果 (含新舊外觀、Emoji、是否進化標記)
+    Route-->>Browser: 回傳 JSON 結果 (含 updated_pet 與 remaining_feed)
+    Note over Browser: 1. 動態更新進度條、數值與飼料庫存<br/>2. 若進化標記為真，播放進化光效 Modal
 ```
 
 ---
 
 ## 4. 關鍵設計決策
 
-1. **獨立封裝 `api_client.py` 處理外部請求**
-   - **原因**：將呼叫外部食譜 API 的邏輯（如處理 Rate Limit、Error Handling、JSON 解析）與 Route 路由分離，能讓 Controller 保持整潔。未來如果更換食譜 API 供應商，也只需要修改此檔案即可，降低耦合度。
-
-2. **Server-Side Rendering (SSR) 搭配簡易前端 JS**
-   - **原因**：因專案採用 Flask + Jinja2 不做前後端分離，為了彌補等待外部 API 回應時的「畫面卡頓感」，將在前端加入少量的 Vanilla JS 顯示 Loading 動畫，點擊按鈕時立刻給予視覺回饋，兼顧開發速度與使用者體驗。
-
-3. **不在本地端儲存大量食譜，僅存儲使用者庫存**
-   - **原因**：本系統核心價值在於「現有食材應用」，而非建立一個龐大的食譜資料庫。因此食譜內容皆為「即時查詢即時顯示」，SQLite 資料庫僅專注於管理使用者的個人「材料庫」庫存，減輕伺服器儲存負擔。
-
-4. **分離 Configuration 檔案 (`config.py`)**
-   - **原因**：外部食譜 API 通常需要 API Key 等敏感資訊。將設定獨立於 `config.py` 並搭配環境變數 (.env) 管理，可避免將 API Key 直接暴露在 Git 紀錄中，確保系統安全性。
-1. **一體化的後端渲染 (Monolithic SSR) 而非前後端分離**
-   - **原因**：團隊需在有限時間內完成開發，使用 Flask + Jinja2 可減少 API 設計成本與跨域 (CORS) 問題，開發速度最快。互動性較強的「餵食動畫」可透過簡單的 AJAX 呼叫與 JavaScript 來補足。
-
-2. **使用 Transaction (交易機制) 保證資料一致性**
-   - **原因**：在「餵食」的過程中，會同時發生「扣除飼料庫存」與「增加寵物經驗值」兩個動作。這兩個操作必須綁定在同一個 Transaction 中，若其中一個失敗，另一個會 Rollback，避免出現飼料被扣除但寵物沒加經驗值的 Bug。
-
-3. **使用者上傳圖片儲存於本地端 (`static/uploads`)**
-   - **原因**：考量初期為 MVP 階段，暫不引入外部雲端儲存 (如 AWS S3) 以降低複雜度與成本。直接將圖片存在伺服器本地的靜態資料夾中，並在資料庫僅儲存「檔案路徑」，既能輕鬆透過網址存取圖片，又能減輕資料庫負擔。
-
-4. **餵食行為採 AJAX 異步請求**
-   - **原因**：點擊「餵食」如果讓整頁重新整理，會中斷使用者的沉浸感與動畫體驗。因此前端會透過 Fetch API (或 XMLHttpRequest) 呼叫後端路由，後端只回傳 JSON（新的 EXP 與庫存），前端再用 JavaScript 更新畫面與播放進度條動畫。
+1.  **模組化 Package 架構 (`app/` 目錄)**
+    *   *原因*：相較於將所有代碼塞在單一 `app.py` 中，將專案預先進行模組化規劃（分為 `models`、`routes`、`templates` 等）能有效防止程式碼隨功能增加而失控，確保食材管理、食譜推薦、虛擬寵物與圖鑑系統能各自獨立開發、測試，不互相干擾。
+2.  **核心邏輯抽離至服務層 (Service Layer)**
+    *   *原因*：寵物進化判定與經驗值（EXP）跳級更新屬於複雜的業務邏輯，將其獨立封裝於 `app/services/evolution_service.py` 中。這能讓控制器（Routes）保持簡潔，僅負責處理請求與響應，且服務層邏輯可以被不同的 Route（如餵食、烹飪完成、日常登入等）重複調用，提高程式碼重用性。
+3.  **無 ORM 的輕量化資料庫存取層與 ORM 的混合設計**
+    *   *原因*：為了在 MVP 階段維持高效，寵物進化與食材庫存採用 Python 原生 `sqlite3` 與原生 SQL。這在處理 JOIN 複雜查詢時保留了極高的靈活性，並透過 Row Factory 提供 Dict 格式與 Jinja2 對接。同時，使用者帳號與成就則透過 `SQLAlchemy` ORM 管理，便於使用其豐富的驗證、自動更新與 Transaction 機制。
+4.  **連線生命週期管理 (Request-Scoped Connection)**
+    *   *原因*：在 `app/database.py` 中使用 Flask 的 `g` 全局變數管理資料庫連線，並利用 `teardown_appcontext` 在每次 HTTP 請求結束時自動關閉連線。這能確保資料庫連線不洩漏，有效防範併發寫入時可能引發的 SQLite `database is locked` 異常。
+5.  **前台非同步互動 (AJAX + JSON)**
+    *   *原因*：傳統 SSR 在每次使用者餵食寵物時都需要重新載入整個頁面，會造成糟糕的遊戲體驗。透過前台發送 AJAX 請求，後端返回輕量的 JSON 格式數據，前台 JavaScript 接收後進行局部 UI 更新（如進度條增加、文字變更、進化 Modal 彈出、飼料扣減），在保持 SSR 開發便利的同時，獲得極佳的 SPA（單頁應用）流暢互動感。
+6. **上傳圖片儲存於本地端 (`static/uploads`)**
+    *   *原因*：考量初期為 MVP 階段，暫不引入外部雲端儲存 (如 AWS S3) 以降低複雜度與成本。直接將圖片存在伺服器本地的靜態資料夾中，並在資料庫僅儲存「檔案路徑」，既能輕鬆透過網址存取圖片，又能減輕資料庫負擔。

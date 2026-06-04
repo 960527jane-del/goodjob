@@ -2,13 +2,6 @@ from flask import Blueprint, redirect, url_for, render_template, request, flash
 
 main_bp = Blueprint('main', __name__)
 
-@main_bp.route('/', methods=['GET'])
-def index():
-    """
-    將首頁請求重定向至虛擬寵物主頁面
-    """
-    return redirect(url_for('pet.pet_index'))
-
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """

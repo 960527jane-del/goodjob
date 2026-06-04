@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models.ingredient import IngredientModel
 
 # 建立 Blueprint
-ingredient_bp = Blueprint('ingredient', __name__, url_prefix='/ingredient')
+ingredient_bp = Blueprint('ingredient', __name__, url_prefix='/ingredients')
 
 @ingredient_bp.route('/')
 def list_ingredients():

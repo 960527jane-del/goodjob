@@ -1,12 +1,8 @@
-from flask import Blueprint
-
-# 定義藍圖
-ingredient_bp = Blueprint('ingredient', __name__, url_prefix='/ingredients')
-recipe_bp = Blueprint('recipe', __name__, url_prefix='/recipes')
-
-# 匯入路由實作
+# 匯入路由實作與藍圖
 from . import ingredient
 from . import recipe
+from .ingredient import ingredient_bp
+from .recipe import recipe_bp
 
 # 從其他模組匯入藍圖
 from app.routes.main import main_bp

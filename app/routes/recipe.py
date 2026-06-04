@@ -1,7 +1,9 @@
-from flask import render_template, current_app, flash
+from flask import Blueprint, render_template, current_app, flash
 import requests
-from . import recipe_bp
 from app.models.ingredient import IngredientModel
+
+# 建立 Blueprint
+recipe_bp = Blueprint('recipe', __name__, url_prefix='/recipes')
 
 def get_mock_recipes():
     """提供測試用的食譜清單假資料"""

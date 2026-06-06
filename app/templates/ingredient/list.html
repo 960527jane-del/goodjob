@@ -12,8 +12,8 @@
         <div class="col-md-4 col-sm-6">
             <div class="card glass-card h-100 ingredient-card">
                 <div class="card-body">
-                    <h4 class="card-title fw-bold text-primary-light">{{ item.name }}</h4>
-                    <p class="card-text fs-4 mb-1">{{ item.quantity }} <span class="fs-6 text-muted">{{ item.unit }}</span></p>
+                    <h4 class="card-title fw-bold" style="color: #60A5FA !important;">{{ item.name }}</h4>
+                    <p class="card-text fs-4 mb-1" style="color: #60A5FA !important;">{{ item.quantity }} <span class="fs-6" style="color: #ffffff !important;">{{ item.unit }}</span></p>
                     <p class="card-text text-muted small">
                         有效期限：{{ item.expiry_date if item.expiry_date else '未設定' }}
                     </p>

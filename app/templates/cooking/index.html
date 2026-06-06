@@ -1,34 +1,89 @@
 {% extends "base.html" %}
 
+{% block title %}烹飪回報 - 隨食隨地{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-body p-5">
-                <h2 class="text-center mb-4 fw-bold">🍳 烹飪回報</h2>
-                <p class="text-center text-muted mb-4">完成料理後上傳照片，即可獲得虛擬飼料獎勵！</p>
+<div class="row justify-content-center mt-3">
+    <div class="col-md-6 col-lg-5">
+        <div class="card glass-card p-4 p-md-5" style="border-color: rgba(255, 255, 255, 0.1) !important;">
+            <h2 class="text-center mb-3 fw-bold text-white"><i class="fas fa-camera me-2 text-primary"></i>烹飪回報</h2>
+            <p class="text-center text-muted mb-4">拍照或勾選完成回報，即可獲得虛擬寵物飼料 🥩！</p>
+            
+            <form action="{{ url_for('cooking.submit_report') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="recipe_id" value="{{ recipe.id if recipe else '' }}">
                 
-                <form action="{{ url_for('cooking.submit_report') }}" method="POST" enctype="multipart/form-data">
-                    <div class="mb-4">
-                        <label for="image" class="form-label fw-bold">上傳料理照片</label>
-                        <input class="form-control form-control-lg bg-light" type="file" id="image" name="image" accept="image/*">
+                {% if recipe %}
+                <div class="alert alert-info py-2 px-3 mb-4 rounded-3 text-white border-info-subtle" style="background: rgba(59, 130, 246, 0.15);">
+                    🍳 <strong>正在回報推薦食譜：</strong> {{ recipe.title }}
+                </div>
+                {% endif %}
+                <!-- 檔案選擇與預覽 -->
+                <div class="mb-4">
+                    <label for="image" class="form-label text-light-muted fw-bold">上傳料理成品照片</label>
+                    <input class="form-control custom-input" type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+                    <div class="form-text text-muted">支持 JPG, PNG, GIF 格式圖片</div>
+                </div>
+                
+                <!-- 預覽容器 -->
+                <div class="mb-4 text-center d-none" id="preview-container">
+                    <p class="text-muted small mb-2">照片預覽：</p>
+                    <div class="position-relative mx-auto rounded-4 overflow-hidden shadow-lg border" style="max-width: 250px; max-height: 250px; border-color: rgba(255,255,255,0.15) !important;">
+                        <img id="image-preview" src="#" alt="料理照片預覽" class="w-100 h-100 object-fit-cover">
+                        <button type="button" class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle" onclick="removePreview()" style="width: 30px; height: 30px; padding: 0;">×</button>
                     </div>
-                    
-                    <div class="form-check mb-4 d-flex align-items-center">
-                        <input class="form-check-input me-2 shadow-sm" type="checkbox" value="true" id="completed" name="completed" style="transform: scale(1.2);">
-                        <label class="form-check-label text-muted" for="completed">
-                            我已完成料理（若無法拍照可直接勾選）
+                </div>
+                
+                <!-- 完成狀態勾選 -->
+                <div class="pref-section card p-3 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px;">
+                    <div class="form-check form-switch d-flex align-items-center">
+                        <input class="form-check-input me-3" type="checkbox" value="true" id="completed" name="completed" style="transform: scale(1.3); cursor: pointer;">
+                        <label class="form-check-label text-light-muted" for="completed" style="cursor: pointer;">
+                            <strong>我已完成烹飪</strong> <span class="d-block small text-muted">若無法拍照，可直接開啟此開關提交。</span>
                         </label>
                     </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm text-white fw-bold" style="background-color: #4CAF50; border: none;">
-                            ✨ 送出並領取飼料
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                
+                <!-- 提交按鈕 -->
+                <div class="d-grid gap-3">
+                    <button type="submit" class="btn btn-primary btn-gradient rounded-pill py-2.5 fw-bold shadow-lg">
+                        ✨ 送出料理並領取飼料
+                    </button>
+                    <a href="{{ url_for('pet.pet_index') }}" class="btn btn-link text-muted text-decoration-none text-center">返回主畫面</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const reader = new FileReader();
+        
+        reader.onload = function(){
+            const dataURL = reader.result;
+            const preview = document.getElementById('image-preview');
+            const container = document.getElementById('preview-container');
+            
+            preview.src = dataURL;
+            container.classList.remove('d-none');
+        };
+        
+        if (input.files && input.files[0]) {
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removePreview() {
+        const input = document.getElementById('image');
+        const preview = document.getElementById('image-preview');
+        const container = document.getElementById('preview-container');
+        
+        input.value = "";
+        preview.src = "#";
+        container.classList.add('d-none');
+    }
+</script>
 {% endblock %}

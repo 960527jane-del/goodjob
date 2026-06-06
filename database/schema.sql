@@ -103,7 +103,8 @@ CREATE TABLE IF NOT EXISTS recipe (
     tags          TEXT,
     cooking_time  INTEGER,
     difficulty    TEXT,
-    allergens     TEXT
+    allergens     TEXT,
+    required_ingredients TEXT
 );
 
 -- 10. 使用者食譜收藏表 (F-02)

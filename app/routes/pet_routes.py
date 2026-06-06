@@ -1,22 +1,24 @@
 from flask import Blueprint, render_template, jsonify, request
+from flask_login import login_required, current_user
 from app.models.pet import Pet
 from app.models.feed_inventory import FeedInventory
+from sql_models import db, User
 
 # 建立 Blueprint
 pet_bp = Blueprint('pet', __name__, url_prefix='/pet')
 
+
 @pet_bp.route('/', methods=['GET'])
+@login_required
 def pet_index():
     """
     顯示寵物專屬頁面
-    
-    - 取得預設使用者的寵物資料 (MVP hardcode user_id=1)
+    - 取得目前登入使用者的寵物資料
     - 若寵物不存在則自動建立一隻
     - 取得或建立使用者的飼料庫存 (F-04 整合)
     - 將寵物與庫存資料傳入 templates/pet/index.html 進行渲染
     """
-    # MVP 階段預設使用 user_id = 1
-    user_id = 1
+    user_id = current_user.id
     
     try:
         # 嘗試取得寵物
@@ -24,7 +26,7 @@ def pet_index():
         
         # 若無寵物，則建立預設寵物
         if not pet:
-            Pet.create(user_id, "我的預設寵物")
+            Pet.create(user_id, f"{current_user.display_name}的寵物")
             pet = Pet.get_by_user_id(user_id)
             
         # 取得或建立飼料庫存 (F-04 整合)
@@ -36,19 +38,19 @@ def pet_index():
     except Exception as e:
         return f"發生錯誤: {str(e)}", 500
 
+
 @pet_bp.route('/feed', methods=['POST'])
+@login_required
 def feed_pet():
     """
     處理手動餵食請求
-    
-    - 取得預設使用者的寵物 (MVP hardcode user_id=1)
+    - 取得當前使用者的寵物
     - 檢查飽食度是否已達上限 (100)
     - 檢查並扣除 1 個飼料庫存 (F-04 整合)
     - 呼叫 Pet.feed 增加飽食度 (+20) 與經驗值 (+20)，並處理升級與進化
     - 回傳 JSON 格式的最新寵物狀態與剩餘飼料數
     """
-    # MVP 階段預設使用 user_id = 1
-    user_id = 1
+    user_id = current_user.id
     
     try:
         pet = Pet.get_by_user_id(user_id)
@@ -75,9 +77,8 @@ def feed_pet():
         updated_pet = Pet.feed(pet['id'], exp_amount=20, hunger_increase=20)
         
         # 檢查成就
-        from sql_models import User
-        user = User.query.get(user_id)
         unlocked_achievements = []
+        user = db.session.get(User, user_id)
         if user:
             newly_unlocked = user.check_achievements()
             unlocked_achievements = [{
@@ -95,12 +96,14 @@ def feed_pet():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+
 @pet_bp.route('/status', methods=['GET'])
+@login_required
 def pet_status():
     """
     API 端點：取得寵物最新狀態 (含飽食度與成長值)
     """
-    user_id = 1
+    user_id = current_user.id
     try:
         pet = Pet.get_by_user_id(user_id)
         if not pet:

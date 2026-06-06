@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}個人資料與成就 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="row g-4 mt-3">
+    <!-- 左側：個人狀態卡與寵物簡介 -->
+    <div class="col-lg-4">
+        <!-- 個人基本資料 -->
+        <div class="glass-card mb-4 text-center p-4" style="border-color: rgba(255,255,255,0.1) !important;">
+            <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mx-auto mb-3 shadow" style="width: 100px; height: 100px; font-size: 3rem;">
+                👤
+            </div>
+            <h3 class="fw-bold text-white mb-1">{{ current_user.display_name }}</h3>
+            <p class="text-muted small mb-3">@{{ current_user.username }}</p>
+            <p class="text-muted small border-bottom border-secondary-subtle pb-3">{{ current_user.email }}</p>
+            
+            <div class="row text-center mt-3">
+                <div class="col-6 border-end border-secondary-subtle">
+                    <span class="text-muted small d-block">累計烹飪</span>
+                    <h3 class="fw-bold text-primary mb-0">{{ current_user.cooking_count }} 次</h3>
+                </div>
+                <div class="col-6">
+                    <span class="text-muted small d-block">解鎖成就</span>
+                    <h3 class="fw-bold text-warning mb-0">{{ unlocked_achievements|length }} 個</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- 當前寵物簡介 -->
+        {% if pet %}
+        <div class="glass-card text-center p-4" 
+             style="border-color: rgba(255,255,255,0.1) !important;
+                    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba({{ 139 if pet.element == 'fire' else (0 if pet.element == 'nature' else 255) }}, 
+                                                                                   {{ 92 if pet.element == 'fire' else (184 if pet.element == 'nature' else 159) }}, 
+                                                                                   {{ 36 if pet.element == 'fire' else (148 if pet.element == 'nature' else 67) }}, 0.1));">
+            <h5 class="fw-bold text-white mb-3 text-start">🐾 我的寵物狀態</h5>
+            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 shadow" 
+                 style="width: 90px; height: 90px; border: 3px solid {{ pet.color_primary or '#8B5CF6' }}; background: rgba(255,255,255,0.05);">
+                <span style="font-size: 3rem;">{{ pet.stage_emoji or '🥚' }}</span>
+            </div>
+            <h4 class="fw-bold text-white mb-1">{{ pet.pet_name or pet.species_name }}</h4>
+            <div class="mb-2">
+                <span class="badge bg-primary rounded-pill px-3 py-1">Lv.{{ pet.level }}</span>
+                <span class="badge bg-success rounded-pill px-3 py-1">{{ pet.stage_name }}</span>
+            </div>
+            <p class="text-muted small mb-0">{{ pet.stage_description or '熱愛美食的虛擬寵物' }}</p>
+            <a href="{{ url_for('pet.pet_index') }}" class="btn btn-sm btn-outline-light rounded-pill px-4 mt-3">去餵食寵物</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 右側：成就清單與食譜收藏 -->
+    <div class="col-lg-8">
+        <!-- 達成成就 -->
+        <div class="glass-card mb-4 p-4" style="border-color: rgba(255,255,255,0.1) !important;">
+            <h3 class="fw-bold text-white mb-4"><i class="fas fa-medal me-2 text-warning"></i>解鎖成就勳章</h3>
+            
+            {% if unlocked_achievements %}
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+                    {% for ach, unlocked_at in unlocked_achievements %}
+                    <div class="col">
+                        <div class="glass-card p-3 h-100 d-flex align-items-center" style="background: rgba(255, 255, 255, 0.03); border-color: rgba(255,255,255,0.05); padding: 1rem;">
+                            <div class="fs-1 me-3 p-2 bg-warning-subtle rounded-3 text-center shadow-sm" style="min-width: 65px; height: 65px; line-height: 50px;">
+                                {{ ach.icon }}
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-white mb-1">{{ ach.name }}</h5>
+                                <p class="text-muted small mb-1">{{ ach.description }}</p>
+                                <span class="text-muted fs-8">🔓 解鎖於：{{ unlocked_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <span class="fs-1">🔒</span>
+                    <p class="mb-0 mt-2">尚未解鎖任何成就，快去完成料理回報獲得第一個成就吧！</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 收藏的食譜 -->
+        <div class="glass-card p-4" style="border-color: rgba(255,255,255,0.1) !important;">
+            <h3 class="fw-bold text-white mb-4"><i class="fas fa-heart me-2 text-danger"></i>收藏的智慧食譜</h3>
+            
+            {% if saved_recipes %}
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+                    {% for recipe in saved_recipes %}
+                    <div class="col">
+                        <div class="card glass-card h-100 d-flex flex-row overflow-hidden p-0" style="background: rgba(255, 255, 255, 0.03); border-color: rgba(255,255,255,0.05); min-height: 100px;">
+                            <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="object-fit-cover" style="width: 100px; height: 100%;">
+                            <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <h5 class="fw-bold text-white mb-1">{{ recipe.title }}</h5>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 small">⏱️ {{ recipe.cooking_time }} 分鐘</span>
+                                </div>
+                                <div class="text-end">
+                                    <a href="{{ url_for('recipe.detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1">查看步驟</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <span class="fs-1">⭐</span>
+                    <p class="mb-0 mt-2">目前沒有收藏任何食譜。可以在推薦食譜步驟頁面點選愛心收藏喔！</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

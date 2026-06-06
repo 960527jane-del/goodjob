@@ -26,8 +26,23 @@ def create_app(test_config=None):
     
     # Initialize SQLAlchemy
     db.init_app(app)
+    
+    # Initialize Flask-Login
+    from flask_login import LoginManager
+    login_manager = LoginManager()
+    login_manager.login_view = 'main.login'
+    login_manager.login_message = '請先登入系統！'
+    login_manager.login_message_category = 'warning'
+    login_manager.init_app(app)
+    
+    from sql_models import User
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
     with app.app_context():
         db.create_all()
+        
         
     # Register Blueprints
     from app.routes import register_blueprints

@@ -1,10 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app.models.ingredient import IngredientModel
 
 # 建立 Blueprint
 ingredient_bp = Blueprint('ingredient', __name__, url_prefix='/ingredient')
 
+
 @ingredient_bp.route('/')
+@login_required
 def list_ingredients():
     """
     [GET] 顯示所有材料庫內的食材
@@ -14,10 +17,13 @@ def list_ingredients():
     ingredients = IngredientModel.get_all()
     return render_template('ingredient/list.html', ingredients=ingredients)
 
+
 # Register index as an alias endpoint pointing to list_ingredients
 ingredient_bp.add_url_rule('/', endpoint='index', view_func=list_ingredients)
 
+
 @ingredient_bp.route('/new')
+@login_required
 def new_ingredient():
     """
     [GET] 顯示新增食材的表單頁面
@@ -25,7 +31,9 @@ def new_ingredient():
     """
     return render_template('ingredient/new.html')
 
+
 @ingredient_bp.route('/', methods=['POST'])
+@login_required
 def create_ingredient():
     """
     [POST] 接收表單資料，建立新食材並存入資料庫
@@ -57,7 +65,9 @@ def create_ingredient():
         
     return redirect(url_for('ingredient.list_ingredients'))
 
+
 @ingredient_bp.route('/<int:id>/edit')
+@login_required
 def edit_ingredient(id):
     """
     [GET] 顯示編輯特定食材的表單頁面
@@ -71,7 +81,9 @@ def edit_ingredient(id):
         
     return render_template('ingredient/edit.html', ingredient=ingredient)
 
+
 @ingredient_bp.route('/<int:id>/update', methods=['POST'])
+@login_required
 def update_ingredient(id):
     """
     [POST] 接收表單資料，更新特定食材資訊
@@ -101,7 +113,9 @@ def update_ingredient(id):
         
     return redirect(url_for('ingredient.list_ingredients'))
 
+
 @ingredient_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
 def delete_ingredient(id):
     """
     [POST] 刪除特定食材

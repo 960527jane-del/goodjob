@@ -33,6 +33,54 @@ def map_pet_row(row):
     return d
 
 
+def check_and_apply_decay(conn, user_id=None, pet_id=None):
+    """計算自上次更新後流逝的時間，並扣減飽食度 (1 點 / 2 分鐘)"""
+    from datetime import datetime
+    if user_id is not None:
+        row = conn.execute("SELECT id, hunger, updated_at FROM user_pets WHERE user_id = ?", (user_id,)).fetchone()
+    elif pet_id is not None:
+        row = conn.execute("SELECT id, hunger, updated_at FROM user_pets WHERE id = ?", (pet_id,)).fetchone()
+    else:
+        return
+        
+    if not row:
+        return
+        
+    pid = row['id']
+    current_hunger = row['hunger'] if row['hunger'] is not None else 50
+    updated_at_str = row['updated_at']
+    
+    if current_hunger <= 0:
+        return
+        
+    def parse_ts(ts):
+        if not ts:
+            return datetime.utcnow()
+        if isinstance(ts, datetime):
+            return ts
+        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S.%f'):
+            try:
+                return datetime.strptime(ts, fmt)
+            except ValueError:
+                continue
+        return datetime.utcnow()
+        
+    updated_at = parse_ts(updated_at_str)
+    now = datetime.utcnow()
+    elapsed_seconds = (now - updated_at).total_seconds()
+    if elapsed_seconds < 0:
+        elapsed_seconds = 0
+        
+    decay_points = int(elapsed_seconds // 120)
+    if decay_points >= 1:
+        new_hunger = max(0, current_hunger - decay_points)
+        conn.execute(
+            "UPDATE user_pets SET hunger = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (new_hunger, pid)
+        )
+        conn.commit()
+
+
 # ============================================================
 # F-06 函數式 API (使用 get_db)
 # ============================================================
@@ -40,6 +88,7 @@ def map_pet_row(row):
 def get_pet_by_user(user_id):
     """取得使用者的寵物狀態（含種族與當前階段資訊）"""
     db = get_db()
+    check_and_apply_decay(db, user_id=user_id)
     row = db.execute('''
         SELECT up.*, 
                ps.name AS species_name, ps.element, ps.emoji AS species_emoji,
@@ -180,6 +229,7 @@ class Pet:
         """根據寵物 ID 取得寵物狀態"""
         conn = get_db_connection()
         try:
+            check_and_apply_decay(conn, pet_id=pet_id)
             row = conn.execute('''
                 SELECT up.*, 
                        ps.name AS species_name, ps.element, ps.emoji AS species_emoji,
@@ -202,6 +252,7 @@ class Pet:
         """根據使用者 ID 取得寵物狀態"""
         conn = get_db_connection()
         try:
+            check_and_apply_decay(conn, user_id=user_id)
             row = conn.execute('''
                 SELECT up.*, 
                        ps.name AS species_name, ps.element, ps.emoji AS species_emoji,
@@ -312,6 +363,7 @@ class Pet:
         # 1. 查詢當前狀態
         conn = get_db_connection()
         try:
+            check_and_apply_decay(conn, pet_id=pet_id)
             row = conn.execute('SELECT user_id, hunger FROM user_pets WHERE id = ?', (pet_id,)).fetchone()
             if not row:
                 raise ValueError("Pet not found")

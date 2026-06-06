@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="隨「食」隨地 — 虛擬寵物養成系統">
+    <title>我的虛擬寵物 - 隨食隨地</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Premium CSS Glassmorphism Theme -->
+    <style>
+        :root {
+            --primary-glow: #8B5CF6;
+            --secondary-glow: #EC4899;
+            --bg-color: #0F172A;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #F8FAFC;
+            --text-muted: #ffffff;
+        }
+
+        .text-muted, .text-light-muted, .text-secondary, .form-text, .card-text.text-muted, small.text-muted {
+            color: #ffffff !important;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        h1, h2, h3, .navbar-brand {
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            font-weight: 600;
+        }
+
+        .navbar {
+            background: rgba(15, 23, 42, 0.8) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .navbar-brand {
+            background: linear-gradient(to right, #8B5CF6, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-link {
+            color: var(--text-main) !important;
+            transition: color 0.3s ease;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .nav-link:hover {
+            color: #EC4899 !important;
+        }
+
+        .nav-link i {
+            margin-right: 5px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.2);
+        }
+
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25);
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            border: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #7C3AED, #DB2777);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #FCA5A5;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+        }
+
+        .btn-outline-light {
+            border-color: var(--glass-border);
+            color: var(--text-main);
+        }
+        
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .alert-custom {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--primary-glow);
+            color: var(--text-main);
+        }
+
+        .alert-error {
+            border-color: #EF4444;
+        }
+
+        .alert-success {
+            border-color: #10B981;
+        }
+    </style>
+    
+    
+</head>
+<body>
+    <!-- 導覽列 -->
+    <nav class="navbar navbar-expand-lg sticky-top mb-5 navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">✨ 隨食隨地</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    
+                        <li class="nav-item">
+                            <a class="nav-link" href="/pet/"><i class="fa-solid fa-paw"></i> 寵物養成</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ingredient/"><i class="fa-solid fa-carrot"></i> 材料庫</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/recipes/recommend"><i class="fa-solid fa-utensils"></i> 食譜推薦</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/cooking/"><i class="fa-solid fa-camera"></i> 烹飪回報</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/collection"><i class="fa-solid fa-book"></i> 進化圖鑑</a>
+                        </li>
+                        
+                        <!-- 登入使用者下拉選單 -->
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="nav-link dropdown-toggle btn btn-outline-light rounded-pill px-3 py-1 mt-2 mt-lg-0 text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                👤 預設使用者
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown" style="background-color: #1e293b; border-color: rgba(255,255,255,0.1);">
+                                <li><a class="dropdown-item" href="/profile"><i class="fas fa-medal me-2"></i>個人成就與收藏</a></li>
+                                <li><a class="dropdown-item" href="/preferences"><i class="fas fa-sliders-h me-2"></i>偏好設定</a></li>
+                                <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
+                                <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>🚪 登出</a></li>
+                            </ul>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主體內容 -->
+    <main class="container mb-5">
+        
+            
+        
+
+        
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6 text-center">
+        <!-- 採用 glass-card，並隨寵物主色動態變化陰影效果 -->
+        <div class="glass-card shadow-lg border-0" 
+             style="border-color: rgba(255, 255, 255, 0.15) !important;
+                    box-shadow: 0 10px 40px rgba(255, 
+                                                 159, 
+                                                 67, 0.2) !important;">
+            
+            <div class="card-body p-4">
+                <!-- 寵物名字與種族徽章 -->
+                <h2 class="card-title mb-2 fw-bold text-white" id="pet-display-name">
+                    小食怪
+                </h2>
+                <div class="mb-4">
+                    <span class="badge rounded-pill px-3 py-2 fs-6" 
+                          style="background: linear-gradient(135deg, #FF6B6B, #FFA500); color: #fff;">
+                        🔥 火焰小怪 · 幼火焰
+                    </span>
+                </div>
+                
+                <!-- 寵物圖片/虛擬視覺區塊 -->
+                <div class="pet-image mb-5 position-relative">
+                    <div id="pet-avatar-container" class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-lg" 
+                         style="width: 220px; height: 220px; 
+                                border: 4px solid #FF6B6B;
+                                background: linear-gradient(135deg, #FFA500, rgba(255,255,255,0.15)) !important;">
+                        
+                        <!-- 放大 Emoji 的趣味微動態效果 -->
+                        <span id="pet-avatar-emoji" style="font-size: 6.5rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            🔥
+                        </span>
+                    </div>
+                    
+                    <!-- 升級提示動畫 -->
+                    <div id="level-up-badge" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-50 translate-middle shadow-lg" 
+                         style="display: none; font-size: 1.3rem; z-index: 10; padding: 0.6rem 1.5rem; transform: scale(0);">
+                        🎉 升級啦！進化在即！
+                    </div>
+                </div>
+                
+                <!-- 狀態資訊與進度條 -->
+                <div class="pet-status mb-4 text-start">
+                    <!-- 飽食度進度條 -->
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-6 fw-bold text-white">
+                            🍗 飽食度
+                        </span>
+                        <small class="text-muted">
+                            <span id="pet-hunger">50</span> / 100
+                        </small>
+                    </div>
+                    <div class="progress mb-3" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        
+                        
+                            
+                        
+                        <div id="pet-hunger-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: 50%; 
+                                    background: linear-gradient(to right, #F59E0B, #D97706) !important; 
+                                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);" 
+                             aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <!-- 等級經驗進度條 -->
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-6 fw-bold text-white">
+                            Lv. <span id="pet-level" style="color: #FF6B6B;">1</span>
+                        </span>
+                        <small class="text-muted">
+                            <span id="pet-exp-remaining">40</span> / 
+                            <span id="pet-exp-needed">50</span> EXP
+                        </small>
+                    </div>
+                    <div class="progress" style="height: 18px; border-radius: 9px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        
+                        <div id="pet-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: 80.0%; 
+                                    background: linear-gradient(to right, #FF6B6B, #FFA500) !important; 
+                                    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);" 
+                             aria-valuenow="80.0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- 庫存與狀態欄 (F-04 整合) -->
+                <div class="row g-3 mb-4 mt-3">
+                    <div class="col-6">
+                        <div class="glass-card p-3 rounded-4 h-100 text-center" style="background: rgba(255,255,255,0.02); border-color: rgba(255, 255, 255, 0.05); padding: 1rem;">
+                            <p class="text-muted mb-1 small">飼料庫存</p>
+                            <p class="fs-4 fw-bold mb-0 text-white" id="feed-count">🥩 102</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-card p-3 rounded-4 h-100 text-center" style="background: rgba(255,255,255,0.02); border-color: rgba(255, 255, 255, 0.05); padding: 1rem;">
+                            <p class="text-muted mb-1 small">健康狀態</p>
+                            <p class="fs-4 fw-bold mb-0 text-success">💖 良好</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 互動按鈕 -->
+                <div class="pet-actions mt-4">
+                    <button id="feed-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold" 
+                            title=""
+                            >
+                        <i class="fa-solid fa-cookie-bite"></i> 手動餵食
+                    </button>
+                    <div class="mt-2 text-muted small">餵食可令寵物獲得經驗並提升等級，解鎖更多進化！</div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- 成就解鎖提示通知 -->
+<div id="achievement-toast" class="glass-card shadow-lg border-primary position-fixed bottom-0 end-0 m-4 p-3" 
+     style="display: none; z-index: 1050; max-width: 350px; background: rgba(15, 23, 42, 0.95); border: 2px solid #8B5CF6; transform: translateY(100px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" id="achievement-toast-icon">🏆</div>
+        <div>
+            <h5 class="fw-bold text-white mb-1" id="achievement-toast-title">解鎖新成就！</h5>
+            <p class="text-muted mb-0 small" id="achievement-toast-desc">成就描述內容</p>
+        </div>
+    </div>
+</div>
+
+<!-- 進化動畫彈窗 (使用 F-06 的彈窗模版以求一致) -->
+<!-- 進化動畫彈窗組件 -->
+<div class="evolution-modal" id="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title" style="display: none;">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content">
+        <div class="modal-particles" aria-hidden="true">
+            <span class="sparkle s1">✦</span>
+            <span class="sparkle s2">✧</span>
+            <span class="sparkle s3">✦</span>
+            <span class="sparkle s4">✧</span>
+            <span class="sparkle s5">✦</span>
+            <span class="sparkle s6">✧</span>
+            <span class="sparkle s7">✦</span>
+            <span class="sparkle s8">✧</span>
+        </div>
+
+        <h2 class="modal-header" id="evolution-title">🎉 恭喜進化！</h2>
+
+        <div class="evolution-comparison">
+            <div class="evo-before">
+                <div class="evo-circle">
+                    <span class="evo-emoji" id="evo-old-emoji">🥚</span>
+                </div>
+                <span class="evo-label" id="evo-old-name">舊型態</span>
+            </div>
+
+            <div class="evo-arrow">
+                <span class="arrow-icon">⟶</span>
+            </div>
+
+            <div class="evo-after">
+                <div class="evo-circle evo-circle-new">
+                    <span class="evo-emoji" id="evo-new-emoji">🍳</span>
+                </div>
+                <span class="evo-label" id="evo-new-name">新型態</span>
+            </div>
+        </div>
+
+        <p class="evo-description" id="evo-description">你的寵物進化了！</p>
+
+        <button class="modal-confirm-btn" id="evolution-confirm-btn">
+            太棒了！ 🎊
+        </button>
+    </div>
+</div>
+
+    </main>
+
+    <footer class="text-center pb-4 text-muted" style="font-size: 0.9rem;">
+        <p>&copy; 2026 隨食隨地. Made with 💖</p>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const feedBtn = document.getElementById('feed-btn');
+        const levelSpan = document.getElementById('pet-level');
+        const expRemainingSpan = document.getElementById('pet-exp-remaining');
+        const expNeededSpan = document.getElementById('pet-exp-needed');
+        const progressBar = document.getElementById('pet-progress');
+        const levelUpBadge = document.getElementById('level-up-badge');
+        const petAvatarEmoji = document.getElementById('pet-avatar-emoji');
+        const feedCountSpan = document.getElementById('feed-count');
+        
+        feedBtn.addEventListener('click', function() {
+            feedBtn.disabled = true;
+            feedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 餵食中...';
+            
+            fetch("/pet/feed", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const pet = data.pet;
+                    
+                    // 更新進度條與文字
+                    progressBar.style.width = pet.exp_progress + '%';
+                    progressBar.setAttribute('aria-valuenow', pet.exp_progress);
+                    expRemainingSpan.textContent = pet.exp_remaining;
+                    expNeededSpan.textContent = pet.exp_to_next_level;
+                    
+                    // 更新飽食度與飽食進度條
+                    const hungerSpan = document.getElementById('pet-hunger');
+                    const hungerBar = document.getElementById('pet-hunger-progress');
+                    if (hungerSpan && hungerBar) {
+                        hungerSpan.textContent = pet.hunger;
+                        hungerBar.style.width = pet.hunger + '%';
+                        hungerBar.setAttribute('aria-valuenow', pet.hunger);
+                        
+                        // 動態更新飽食度顏色
+                        if (pet.hunger >= 70) {
+                            hungerBar.style.setProperty('background', 'linear-gradient(to right, #10B981, #059669)', 'important');
+                        } else if (pet.hunger >= 30) {
+                            hungerBar.style.setProperty('background', 'linear-gradient(to right, #F59E0B, #D97706)', 'important');
+                        } else {
+                            hungerBar.style.setProperty('background', 'linear-gradient(to right, #EF4444, #DC2626)', 'important');
+                        }
+                    }
+                    
+                    // 更新庫存數量 (F-04)
+                    if (feedCountSpan && data.remaining_feed !== undefined) {
+                        feedCountSpan.textContent = '🥩 ' + data.remaining_feed;
+                    }
+                    
+                    // 點擊微震動效果
+                    petAvatarEmoji.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        petAvatarEmoji.style.transform = 'scale(1)';
+                    }, 200);
+
+                    // 若有升級，則顯示特效並更新等級
+                    if (pet.is_level_up) {
+                        levelSpan.textContent = pet.level;
+                        
+                        // 顯示升級徽章並執行簡單的 CSS 動畫
+                        levelUpBadge.style.display = 'block';
+                        levelUpBadge.style.transform = 'translate(-50%, -50%) scale(1)';
+                        levelUpBadge.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        
+                        // 3 秒後隱藏升級徽章
+                        setTimeout(() => {
+                            levelUpBadge.style.transform = 'translate(-50%, -50%) scale(0)';
+                            setTimeout(() => {
+                                levelUpBadge.style.display = 'none';
+                            }, 500);
+                        }, 3000);
+                    }
+
+                    // 檢查是否觸發了進化 (evolution)
+                    if (pet.evolution && pet.evolution.evolved) {
+                        // 延遲一點點展現進化彈窗，體驗更佳
+                        setTimeout(() => {
+                            showEvolutionModal(pet.evolution);
+                        }, 800);
+                    }
+                    
+                    // 顯示解鎖的成就
+                    if (data.unlocked_achievements && data.unlocked_achievements.length > 0) {
+                        data.unlocked_achievements.forEach((ach, index) => {
+                            setTimeout(() => {
+                                const toast = document.getElementById('achievement-toast');
+                                const toastIcon = document.getElementById('achievement-toast-icon');
+                                const toastTitle = document.getElementById('achievement-toast-title');
+                                const toastDesc = document.getElementById('achievement-toast-desc');
+                                
+                                toastIcon.textContent = ach.icon;
+                                toastTitle.textContent = '解鎖成就：' + ach.name;
+                                toastDesc.textContent = ach.description;
+                                
+                                toast.style.display = 'block';
+                                setTimeout(() => {
+                                    toast.style.transform = 'translateY(0)';
+                                }, 50);
+                                
+                                // 4 秒後自動消失
+                                setTimeout(() => {
+                                    toast.style.transform = 'translateY(100px)';
+                                    setTimeout(() => {
+                                        toast.style.display = 'none';
+                                    }, 500);
+                                }, 4000);
+                            }, index * 4500);
+                        });
+                    }
+                    
+                    // 檢查剩餘飼料與飽食度是否還足夠下次餵食
+                    if (pet.hunger >= 100) {
+                        feedBtn.disabled = true;
+                        feedBtn.title = "寵物已經很飽了！";
+                    } else if (data.remaining_feed !== undefined && data.remaining_feed < 1) {
+                        feedBtn.disabled = true;
+                        feedBtn.title = "飼料不足！";
+                    } else {
+                        feedBtn.disabled = false;
+                        feedBtn.title = "";
+                    }
+                } else {
+                    alert('發生錯誤: ' + (data.message || data.error));
+                    feedBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("伺服器連線失敗");
+                feedBtn.disabled = false;
+            })
+            .finally(() => {
+                // 恢復按鈕文字
+                feedBtn.innerHTML = '<i class="fa-solid fa-cookie-bite"></i> 手動餵食';
+            });
+        });
+
+        // 綁定進化彈窗關閉按鈕
+        const confirmBtn = document.getElementById('evolution-confirm-btn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+        
+        const backdrop = document.getElementById('modal-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+
+        function showEvolutionModal(evolution) {
+            const modal = document.getElementById('evolution-modal');
+            if (!modal) return;
+
+            const oldEmoji = document.getElementById('evo-old-emoji');
+            const newEmoji = document.getElementById('evo-new-emoji');
+            const oldName = document.getElementById('evo-old-name');
+            const newName = document.getElementById('evo-new-name');
+            const desc = document.getElementById('evo-description');
+
+            if (oldEmoji) oldEmoji.textContent = evolution.old_stage.emoji;
+            if (newEmoji) newEmoji.textContent = evolution.new_stage.emoji;
+            if (oldName) oldName.textContent = evolution.old_stage.name;
+            if (newName) newName.textContent = evolution.new_stage.name;
+            if (desc) desc.textContent = evolution.new_stage.description || '你的寵物進化成了全新的型態！';
+
+            modal.style.display = 'flex';
+        }
+    });
+</script>
+
+</body>
+</html>

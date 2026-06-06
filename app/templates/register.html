@@ -10,7 +10,7 @@
                 <p class="text-muted">加入隨「食」隨地，開始你的烹飪冒險！</p>
             </div>
 
-            <form method="POST" action="{{ url_for('register') }}">
+            <form method="POST" action="{{ url_for('main.register') }}">
                 <div class="mb-3">
                     <label for="email" class="form-label fw-bold">
                         <i class="fas fa-envelope me-1 text-primary"></i>Email
@@ -60,7 +60,7 @@
             <div class="text-center mt-2">
                 <p class="text-muted mb-0">
                     已經有帳號了？
-                    <a href="{{ url_for('login') }}" class="text-primary fw-bold text-decoration-none">登入</a>
+                    <a href="{{ url_for('main.login') }}" class="text-primary fw-bold text-decoration-none">登入</a>
                 </p>
             </div>
         </div>

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ recipe.title }} - 食譜詳情 - 隨食隨地{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <!-- 返回連結 -->
+        <div class="mb-3">
+            <a href="{{ url_for('recipe.recommend') }}" class="text-decoration-none text-muted">
+                <i class="fas fa-arrow-left me-2"></i>返回推薦清單
+            </a>
+        </div>
+
+        <div class="card glass-card shadow border-0 overflow-hidden" style="border-color: rgba(255,255,255,0.1) !important;">
+            <!-- 食譜圖片與收藏按鈕 -->
+            <div class="position-relative" style="height: 350px;">
+                <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="w-100 h-100 object-fit-cover">
+                <!-- 遮罩層 -->
+                <div class="position-absolute bottom-0 start-0 w-100 p-4" style="background: linear-gradient(to top, rgba(15,23,42,0.9), transparent);">
+                    <h1 class="display-6 fw-bold text-white mb-0">{{ recipe.title }}</h1>
+                </div>
+                <!-- 收藏按鈕 -->
+                <div class="position-absolute top-0 end-0 m-3">
+                    <button id="favorite-btn" class="btn btn-dark btn-lg rounded-circle shadow" style="width: 55px; height: 55px; background-color: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="{% if is_favorited %}fas fa-heart text-danger{% else %}far fa-heart text-white{% endif %}" id="fav-icon" style="font-size: 1.6rem; vertical-align: middle;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <!-- 食譜資訊條 -->
+                <div class="row g-3 text-center mb-5 border-bottom border-secondary-subtle pb-4">
+                    <div class="col-4">
+                        <span class="text-muted small d-block">烹飪時間</span>
+                        <h4 class="fw-bold text-primary mb-0 mt-1"><i class="far fa-clock me-1"></i>{{ recipe.cooking_time }} 分鐘</h4>
+                    </div>
+                    <div class="col-4">
+                        <span class="text-muted small d-block">製作難度</span>
+                        <h4 class="fw-bold text-success mb-0 mt-1">
+                            <i class="fas fa-layer-group me-1"></i>
+                            {{ '新手' if recipe.difficulty == 'beginner' else ('家常' if recipe.difficulty == 'intermediate' else '大師') }}
+                        </h4>
+                    </div>
+                    <div class="col-4">
+                        <span class="text-muted small d-block">過敏原</span>
+                        <h4 class="fw-bold text-warning mb-0 mt-1">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            {{ recipe.allergens if recipe.allergens else '無' }}
+                        </h4>
+                    </div>
+                </div>
+
+                <!-- 食材比對 -->
+                <div class="mb-5">
+                    <h3 class="fw-bold text-white mb-3"><i class="fas fa-shopping-basket me-2 text-primary"></i>所需食材比對</h3>
+                    <div class="row">
+                        <!-- 冰箱已有 -->
+                        <div class="col-md-6 mb-3">
+                            <div class="glass-card p-3 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+                                <h5 class="fw-bold text-success mb-3"><i class="fas fa-check-circle me-2"></i>冰箱已有的食材</h5>
+                                {% if matching_ingredients %}
+                                    <ul class="list-unstyled mb-0">
+                                        {% for item in matching_ingredients %}
+                                        <li class="py-2 border-bottom border-secondary-subtle d-flex justify-content-between align-items-center">
+                                            <span>🥚 {{ item.name }}</span>
+                                            <span class="badge bg-success rounded-pill">{{ item.quantity }} {{ item.unit }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-danger-emphasis small italic mb-0">無可用食材匹配</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 冰箱缺漏 -->
+                        <div class="col-md-6 mb-3">
+                            <div class="glass-card p-3 rounded-4 h-100" style="background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2);">
+                                <h5 class="fw-bold text-danger mb-3"><i class="fas fa-times-circle me-2"></i>需要補齊的食材</h5>
+                                {% if missing_ingredients %}
+                                    <ul class="list-unstyled mb-0">
+                                        {% for item in missing_ingredients %}
+                                        <li class="py-2 border-bottom border-secondary-subtle text-danger-emphasis">
+                                            ⚠ {{ item }} (尚缺)
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <span class="fs-1">🥳</span>
+                                        <h6 class="fw-bold text-success mt-2 mb-0">材料齊全，隨時可以開煮！</h6>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 烹飪步驟 -->
+                <div class="mb-5">
+                    <h3 class="fw-bold text-white mb-3"><i class="fas fa-list-ol me-2 text-primary"></i>烹飪步驟</h3>
+                    <div class="glass-card p-4 rounded-4" style="background: rgba(255, 255, 255, 0.02); border-color: rgba(255,255,255,0.05);">
+                        <div style="white-space: pre-line; line-height: 1.8; color: #E2E8F0; font-size: 1.1rem;">
+                            {{ recipe.description }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部烹飪按鈕 -->
+                <div class="text-center mt-5">
+                    <button id="cook-btn" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold shadow">
+                        <i class="fas fa-check-double me-2"></i>我煮好了！提交回報
+                    </button>
+                    <div class="mt-2 text-muted small">提交烹飪回報將自動扣除材料庫食材，並發放飼料與寵物經驗！</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 成就解鎖提示通知 -->
+<div id="recipe-detail-toast" class="glass-card shadow-lg border-primary position-fixed bottom-0 end-0 m-4 p-3" 
+     style="display: none; z-index: 1050; max-width: 350px; background: rgba(15, 23, 42, 0.95); border: 2px solid #8B5CF6; transform: translateY(100px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="d-flex align-items-center">
+        <div class="fs-1 me-3" id="detail-toast-icon">🏆</div>
+        <div>
+            <h5 class="fw-bold text-white mb-1" id="detail-toast-title">解鎖新成就！</h5>
+            <p class="text-muted mb-0 small" id="detail-toast-desc">成就描述內容</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteBtn = document.getElementById('favorite-btn');
+        const favIcon = document.getElementById('fav-icon');
+        const cookBtn = document.getElementById('cook-btn');
+
+        // 收藏按鈕點擊
+        favoriteBtn.addEventListener('click', function() {
+            favoriteBtn.disabled = true;
+            fetch("{{ url_for('recipe.favorite', recipe_id=recipe.id) }}", {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.favorited) {
+                        favIcon.className = "fas fa-heart text-danger";
+                    } else {
+                        favIcon.className = "far fa-heart text-white";
+                    }
+                    // 顯示輕微提示
+                    console.log(data.message);
+                }
+            })
+            .catch(error => console.error("Error:", error))
+            .finally(() => favoriteBtn.disabled = false);
+        });
+
+        // 烹飪按鈕點擊
+        cookBtn.addEventListener('click', function() {
+            if (!confirm("確定完成了這道菜的烹飪，要前往烹飪回報頁面上傳照片或勾選完成來領取飼料嗎？")) {
+                return;
+            }
+            window.location.href = "{{ url_for('cooking.report_page') }}?recipe_id={{ recipe.id }}";
+        });
+    });
+</script>
+{% endblock %}

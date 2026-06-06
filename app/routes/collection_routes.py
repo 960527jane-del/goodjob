@@ -3,10 +3,10 @@
 Blueprint: collection_bp
 """
 from flask import Blueprint, render_template, jsonify, request
+from flask_login import login_required, current_user
 from app.models import pet as pet_model
 from app.models import collection as collection_model
 from app.services import evolution_service
-from config import DEV_USER_ID
 
 collection_bp = Blueprint('collection', __name__)
 
@@ -16,9 +16,10 @@ collection_bp = Blueprint('collection', __name__)
 # ============================================================
 
 @collection_bp.route('/collection')
+@login_required
 def collection_index():
     """圖鑑主頁面"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     pet = pet_model.get_pet_by_user(user_id)
     all_stages = collection_model.get_all_stages()
     unlocked_ids = collection_model.get_user_collection(user_id)
@@ -36,9 +37,10 @@ def collection_index():
 
 
 @collection_bp.route('/collection/<int:stage_id>')
+@login_required
 def collection_detail(stage_id):
     """寵物詳情頁面"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     stage = collection_model.get_stage_by_id(stage_id)
     if not stage:
         return render_template('collection/index.html'), 404
@@ -63,9 +65,10 @@ def collection_detail(stage_id):
 # ============================================================
 
 @collection_bp.route('/api/pet/status', methods=['GET'])
+@login_required
 def api_pet_status():
     """取得寵物狀態"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     status = evolution_service.get_pet_status(user_id)
     if not status:
         return jsonify({'error': '尚未擁有寵物'}), 404
@@ -73,9 +76,10 @@ def api_pet_status():
 
 
 @collection_bp.route('/api/pet/add-exp', methods=['POST'])
+@login_required
 def api_add_exp():
     """增加經驗值（供其他功能模組呼叫）"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     data = request.get_json()
     if not data or 'exp' not in data:
         return jsonify({'error': '請提供 exp 參數'}), 400
@@ -89,9 +93,10 @@ def api_add_exp():
 
 
 @collection_bp.route('/api/pet/evolve', methods=['POST'])
+@login_required
 def api_evolve():
     """手動觸發進化檢查"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     pet = pet_model.get_pet_by_user(user_id)
     if not pet:
         return jsonify({'error': '尚未擁有寵物'}), 404
@@ -103,9 +108,10 @@ def api_evolve():
 
 
 @collection_bp.route('/api/collection', methods=['GET'])
+@login_required
 def api_collection():
     """取得圖鑑資料"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     all_stages = collection_model.get_all_stages()
     unlocked_ids = collection_model.get_user_collection(user_id)
     progress = collection_model.get_collection_progress(user_id)
@@ -130,9 +136,10 @@ def api_collection():
 
 
 @collection_bp.route('/api/collection/<int:stage_id>', methods=['GET'])
+@login_required
 def api_collection_detail(stage_id):
     """取得特定階段詳情"""
-    user_id = DEV_USER_ID
+    user_id = current_user.id
     stage = collection_model.get_stage_by_id(stage_id)
     if not stage:
         return jsonify({'error': '找不到此階段'}), 404

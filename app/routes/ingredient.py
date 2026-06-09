@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.models.ingredient import IngredientModel
 
 # 建立 Blueprint
@@ -14,7 +14,7 @@ def list_ingredients():
     對應模板: ingredient/list.html
     呼叫 Model: IngredientModel.get_all()
     """
-    ingredients = IngredientModel.get_all()
+    ingredients = IngredientModel.get_all(current_user.id)
     return render_template('ingredient/list.html', ingredients=ingredients)
 
 
@@ -57,7 +57,7 @@ def create_ingredient():
         return redirect(url_for('ingredient.new_ingredient'))
 
     # 存入資料庫
-    ingredient_id = IngredientModel.create(name, quantity, unit, expiry_date)
+    ingredient_id = IngredientModel.create(current_user.id, name, quantity, unit, expiry_date)
     if ingredient_id:
         flash('成功新增食材！', 'success')
     else:
@@ -74,7 +74,7 @@ def edit_ingredient(id):
     對應模板: ingredient/edit.html
     呼叫 Model: IngredientModel.get_by_id(id)
     """
-    ingredient = IngredientModel.get_by_id(id)
+    ingredient = IngredientModel.get_by_id(id, current_user.id)
     if not ingredient:
         flash('找不到該食材！', 'error')
         return redirect(url_for('ingredient.list_ingredients'))
@@ -105,7 +105,7 @@ def update_ingredient(id):
         flash('「數量」必須為數字！', 'error')
         return redirect(url_for('ingredient.edit_ingredient', id=id))
 
-    success = IngredientModel.update(id, name, quantity, unit, expiry_date)
+    success = IngredientModel.update(id, name, quantity, unit, expiry_date, current_user.id)
     if success:
         flash('食材更新成功！', 'success')
     else:
@@ -122,7 +122,7 @@ def delete_ingredient(id):
     成功後重導向至 /ingredients
     呼叫 Model: IngredientModel.delete(id)
     """
-    success = IngredientModel.delete(id)
+    success = IngredientModel.delete(id, current_user.id)
     if success:
         flash('食材已刪除！', 'success')
     else:

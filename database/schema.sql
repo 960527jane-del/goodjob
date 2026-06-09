@@ -77,11 +77,13 @@ CREATE TABLE IF NOT EXISTS user_collection (
 -- 7. 食材表 (F-02)
 CREATE TABLE IF NOT EXISTS ingredients (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL,
     name        TEXT NOT NULL,
     quantity    REAL NOT NULL,
     unit        TEXT NOT NULL,
     expiry_date TEXT,
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- 8. 烹飪紀錄表 (F-02)

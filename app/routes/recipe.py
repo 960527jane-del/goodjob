@@ -45,7 +45,7 @@ def recommend():
     allergens = [a.allergen_name for a in current_user.allergens]
 
     # 3. 取得我的材料庫食材
-    pantry_items = IngredientModel.get_all()
+    pantry_items = IngredientModel.get_all(current_user.id)
     pantry_dict = {item['name'].strip(): item for item in pantry_items}
 
     # 4. 取得所有食譜並進行篩選與匹配
@@ -137,7 +137,7 @@ def detail(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
 
     # 取得材料庫做比對
-    pantry_items = IngredientModel.get_all()
+    pantry_items = IngredientModel.get_all(current_user.id)
     pantry_dict = {item['name'].strip(): item for item in pantry_items}
 
     required_list = [i.strip() for i in recipe.required_ingredients.split(',') if i.strip()]
@@ -193,7 +193,7 @@ def cook(recipe_id):
     required_list = [i.strip() for i in recipe.required_ingredients.split(',') if i.strip()]
 
     # 取得材料庫
-    pantry_items = IngredientModel.get_all()
+    pantry_items = IngredientModel.get_all(current_user.id)
     pantry_dict = {item['name'].strip(): item for item in pantry_items}
 
     # 扣減食材庫存
@@ -203,10 +203,10 @@ def cook(recipe_id):
             new_qty = item['quantity'] - 1.0
             if new_qty <= 0:
                 # 數量用盡，刪除食材
-                IngredientModel.delete(item['id'])
+                IngredientModel.delete(item['id'], current_user.id)
             else:
                 # 扣減數量
-                IngredientModel.update(item['id'], item['name'], new_qty, item['unit'], item['expiry_date'])
+                IngredientModel.update(item['id'], item['name'], new_qty, item['unit'], item['expiry_date'], current_user.id)
 
     # 1. 使用者烹飪次數 +1
     current_user.cooking_count += 1

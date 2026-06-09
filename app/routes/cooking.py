@@ -70,7 +70,7 @@ def submit_report():
         if recipe:
             required_list = [i.strip() for i in recipe.required_ingredients.split(',') if i.strip()]
             from app.models.ingredient import IngredientModel
-            pantry_items = IngredientModel.get_all()
+            pantry_items = IngredientModel.get_all(user_id)
             pantry_dict = {item['name'].strip(): item for item in pantry_items}
             
             for req in required_list:
@@ -79,10 +79,10 @@ def submit_report():
                     new_qty = item['quantity'] - 1.0
                     if new_qty <= 0:
                         # 數量用盡，刪除食材
-                        IngredientModel.delete(item['id'])
+                        IngredientModel.delete(item['id'], user_id)
                     else:
                         # 扣減數量
-                        IngredientModel.update(item['id'], item['name'], new_qty, item['unit'], item['expiry_date'])
+                        IngredientModel.update(item['id'], item['name'], new_qty, item['unit'], item['expiry_date'], user_id)
 
     # 新增烹飪紀錄
     record = CookingRecord.create(user_id=user_id, image_path=image_path, status='completed')

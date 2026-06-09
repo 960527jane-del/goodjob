@@ -157,6 +157,38 @@
         .alert-success {
             border-color: #10B981;
         }
+
+        /* 修正認證卡片的文字與輸入框顏色，使其在白色背景的卡片上清晰可見 */
+        .auth-card {
+            color: #212529 !important;
+        }
+
+        .auth-card .form-label {
+            color: #212529 !important;
+        }
+
+        .auth-card .text-muted, 
+        .auth-card .form-text {
+            color: #4b5563 !important;
+        }
+
+        .auth-card .form-control {
+            color: #212529 !important;
+            background-color: #ffffff !important;
+            border: 2px solid #ced4da !important;
+        }
+
+        .auth-card .form-control:focus {
+            color: #212529 !important;
+            background-color: #ffffff !important;
+            border-color: var(--primary-glow) !important;
+            box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25) !important;
+        }
+
+        .auth-card .form-control::placeholder {
+            color: #6c757d !important;
+            opacity: 0.85 !important;
+        }
     </style>
     
     {% block styles %}{% endblock %}

@@ -74,9 +74,9 @@ def register():
         except Exception as e:
             print(f"Error creating pet for new user: {e}")
             
-        # 初始化飼料庫存 (F-04) - 贈送 5 個初始飼料
+        # 初始化飼料庫存 (F-04) - 初始飼料為 0
         try:
-            FeedInventory.create(new_user.id, count=5)
+            FeedInventory.create(new_user.id, count=0)
         except Exception as e:
             print(f"Error creating feed inventory for new user: {e}")
             

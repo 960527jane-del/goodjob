@@ -58,18 +58,18 @@
                         <!-- 冰箱已有 -->
                         <div class="col-md-6 mb-3">
                             <div class="glass-card p-3 rounded-4 h-100" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
-                                <h5 class="fw-bold text-success mb-3"><i class="fas fa-check-circle me-2"></i>冰箱已有的食材</h5>
+                                <h5 class="fw-bold text-success-bright mb-3"><i class="fas fa-check-circle me-2"></i>冰箱已有的食材</h5>
                                 {% if matching_ingredients %}
                                     <ul class="list-unstyled mb-0">
                                         {% for item in matching_ingredients %}
-                                        <li class="py-2 border-bottom border-secondary-subtle d-flex justify-content-between align-items-center">
+                                        <li class="py-2 border-bottom border-secondary-subtle d-flex justify-content-between align-items-center text-success-bright">
                                             <span>🥚 {{ item.name }}</span>
-                                            <span class="badge bg-success rounded-pill">{{ item.quantity }} {{ item.unit }}</span>
+                                            <span class="badge ingredient-match-badge rounded-pill">{{ item.quantity }} {{ item.unit }}</span>
                                         </li>
                                         {% endfor %}
                                     </ul>
                                 {% else %}
-                                    <p class="text-danger-emphasis small italic mb-0">無可用食材匹配</p>
+                                    <p class="text-danger-bright small italic mb-0">無可用食材匹配</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -77,11 +77,11 @@
                         <!-- 冰箱缺漏 -->
                         <div class="col-md-6 mb-3">
                             <div class="glass-card p-3 rounded-4 h-100" style="background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2);">
-                                <h5 class="fw-bold text-danger mb-3"><i class="fas fa-times-circle me-2"></i>需要補齊的食材</h5>
+                                <h5 class="fw-bold text-danger-bright mb-3"><i class="fas fa-times-circle me-2"></i>需要補齊的食材</h5>
                                 {% if missing_ingredients %}
                                     <ul class="list-unstyled mb-0">
                                         {% for item in missing_ingredients %}
-                                        <li class="py-2 border-bottom border-secondary-subtle text-danger-emphasis">
+                                        <li class="py-2 border-bottom border-secondary-subtle text-danger-bright">
                                             ⚠ {{ item }} (尚缺)
                                         </li>
                                         {% endfor %}
@@ -89,7 +89,7 @@
                                 {% else %}
                                     <div class="text-center py-3">
                                         <span class="fs-1">🥳</span>
-                                        <h6 class="fw-bold text-success mt-2 mb-0">材料齊全，隨時可以開煮！</h6>
+                                        <h6 class="fw-bold text-success-bright mt-2 mb-0">材料齊全，隨時可以開煮！</h6>
                                     </div>
                                 {% endif %}
                             </div>

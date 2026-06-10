@@ -98,12 +98,12 @@
                                 <div class="d-flex flex-wrap gap-1 mb-2">
                                     {% if item.matching_ingredients %}
                                         {% for match in item.matching_ingredients %}
-                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+                                        <span class="badge rounded-pill ingredient-match-badge px-2 py-1 small">
                                             ✔ {{ match.name }}
                                         </span>
                                         {% endfor %}
                                     {% else %}
-                                        <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 small">無匹配食材</span>
+                                        <span class="badge rounded-pill ingredient-miss-badge px-2 py-1 small">無匹配食材</span>
                                     {% endif %}
                                 </div>
 
@@ -111,12 +111,12 @@
                                 <div class="d-flex flex-wrap gap-1">
                                     {% if item.missing_ingredients %}
                                         {% for miss in item.missing_ingredients %}
-                                        <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 small">
+                                        <span class="badge rounded-pill ingredient-miss-badge px-2 py-1 small">
                                             ✗ {{ miss }}
                                         </span>
                                         {% endfor %}
                                     {% else %}
-                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1 small">
+                                        <span class="badge rounded-pill ingredient-match-badge px-2 py-1 small">
                                             🎉 材料齊全！
                                         </span>
                                     {% endif %}
